@@ -37,7 +37,6 @@ print('%d unique words found' % vocab_size)
 word_to_idx = { w: i for i, w in enumerate(vocab) }
 idx_to_word = { i: w for i, w in enumerate(vocab) }
 
-
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
@@ -197,7 +196,7 @@ class NeuralNetwork():
                   self.BackwardPropagation(STG)
                 train_loss, train_acc = loss / len(data), num_correct / len(data)
                 
-                if train_loss <= self.LocalLoss and train_acc >= self.LocalAccuracy:
+                if train_loss <= self.LocalLoss and train_acc == self.LocalAccuracy:
                     self.LocalLoss = train_loss
                     self.LocalAccuracy = train_acc
                     # print('Best model')
@@ -209,9 +208,8 @@ class NeuralNetwork():
                 LossArray.append(train_loss)
         plt.plot(LossArray)
         plt.show()
-        self.save()
     def predict(self,data:str):
-        Input = self.PreprocessingText(str(data))
+        Input = self.PreprocessingText(data)
         # Forward
         Output, OutputHiddenLayer = self.FeedForward(Input)
         PredictedValue = softmax(Output)
@@ -242,6 +240,7 @@ print('%d unique words found' % vocab_size)
 word_to_idx = { w: i for i, w in enumerate(vocab) }
 idx_to_word = { i: w for i, w in enumerate(vocab) }
 
+network = NeuralNetwork(vocab_size)
 network.train(test_data,True)
 network.train(test_data,False)
 
@@ -253,10 +252,20 @@ for x, y in items:
     PredictedValue = network.predict(x)
     if PredictedValue == int(y):
         CorrectPredictions += 1
-items = list(test_data.items())
-random.shuffle(items)
-for x, y in items:
-    PredictedValue = network.predict(x)
-    if PredictedValue == int(y):
-        CorrectPredictions += 1
 print(CorrectPredictions)
+while True:
+    InputData = input('Input data:')
+    if InputData != 'stop':
+        vocab = list(set([w for w in InputData.split(' ')]))
+        vocab_size = len(vocab)
+        print('%d unique words found' % vocab_size)
+        # Assign indices to each word.
+        word_to_idx = { w: i for i, w in enumerate(vocab) }
+        print(word_to_idx)
+        idx_to_word = { i: w for i, w in enumerate(vocab) }
+        network = NeuralNetwork(vocab_size)
+        PredictedValue = network.predict(InputData)
+        print(PredictedValue)
+    else:
+        break
+    
