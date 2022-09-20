@@ -167,6 +167,9 @@ class NeuralNetwork():
             items = list(data.items())
             random.shuffle(items)
 
+            loss = 0
+            num_correct = 0
+
             for x, y in items:
                 # Подготовка входных значений
                 Input = self.PreprocessingText(x)
@@ -174,8 +177,8 @@ class NeuralNetwork():
                 # Рассчёт ответа нейросети
                 Output, OutputHiddenLayer = self.FeedForward(Input)
                 PredictedValue = softmax(Output)
-                self.Loss = MSE(Output,Target)
-                self.CorrectPredictions += int(np.argmax(PredictedValue) == Target)
+                loss = MSE(Output,Target)
+                num_correct += int(np.argmax(PredictedValue) == Target)
                 # Обратное распространение ошибки
                 if BackPropagation:
                   # Build dL/dy
@@ -184,7 +187,7 @@ class NeuralNetwork():
                   # Backward Propagation
                   self.BackwardPropagation(STG)
                 # Расчёт количества ошибок и правильных ответов
-                train_loss, train_acc = self.Loss / len(data), self.CorrectPredictions / len(data)
+                train_loss, train_acc = loss / len(data), num_correct / len(data)
                 # Сохранение лучших значений весов для последующего использования нейросети
                 if train_loss <= self.LocalLoss and train_acc == self.LocalAccuracy:
                     self.LocalLoss = train_loss
