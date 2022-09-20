@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import random
 import os 
@@ -12,6 +11,7 @@ np.random.seed(42)
 BATCH_SIZE = 50
 EPOCHS = 25000
 
+TARGET_NAME = ["assistant"]
 CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes']
 learning_rate = 0.0002
 LossArray = []
