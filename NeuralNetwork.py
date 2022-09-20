@@ -9,7 +9,7 @@ from time import sleep
 np.random.seed(42)
 
 BATCH_SIZE = 50
-EPOCHS = 25000
+EPOCHS = 50000
 
 TARGET_NAME = ["assistant"]
 CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes']
@@ -230,6 +230,36 @@ network = NeuralNetwork(vocab_size,len(CATEGORIES),CATEGORIES)
 network.train(test_data,True)
 network.train(test_data,False)
 
+file = open('Datasets/ArtyomNameDataset.json','r',encoding='utf-8')
+DataFile = json.load(file)
+train_data = DataFile['train_dataset']
+test_data = DataFile['test_dataset']
+
+
+
+vocab = list(set([w for text in train_data.keys() for w in text.split(' ')]))
+vocab_size = len(vocab)
+ 
+print('%d unique words found' % vocab_size)
+# Assign indices to each word.
+word_to_idx = { w: i for i, w in enumerate(vocab) }
+idx_to_word = { i: w for i, w in enumerate(vocab) }
+
+network = NeuralNetwork(vocab_size,len(TARGET_NAME),TARGET_NAME)
+network.train(train_data,True)
+network.train(train_data,False)
+
+vocab = list(set([w for text in test_data.keys() for w in text.split(' ')]))
+vocab_size = len(vocab)
+ 
+print('%d unique words found' % vocab_size)
+# Assign indices to each word.
+word_to_idx = { w: i for i, w in enumerate(vocab) }
+idx_to_word = { i: w for i, w in enumerate(vocab) }
+
+network = NeuralNetwork(vocab_size,len(TARGET_NAME),TARGET_NAME)
+network.train(train_data,True)
+network.train(train_data,False)
 # Тест нейросети на скорость
 # CorrectPredictions = 0
 # items = list(train_data.items())
@@ -239,19 +269,19 @@ network.train(test_data,False)
 #     if PredictedValue == int(y):
 #         CorrectPredictions += 1
 # print(CorrectPredictions)
-while True:
-    InputData = input('Input data:')
-    if InputData != 'stop':
-        vocab = list(set([w for w in InputData.split(' ')]))
-        vocab_size = len(vocab)
-        print('%d unique words found' % vocab_size)
-        # Assign indices to each word.
-        word_to_idx = { w: i for i, w in enumerate(vocab) }
-        print(word_to_idx)
-        idx_to_word = { i: w for i, w in enumerate(vocab) }
-        network = NeuralNetwork(vocab_size,len(CATEGORIES),CATEGORIES)
-        PredictedValue = network.predict(InputData)
-        print(PredictedValue)
-    else:
-        break
+# while True:
+#     InputData = input('Input data:')
+#     if InputData != 'stop':
+#         vocab = list(set([w for w in InputData.split(' ')]))
+#         vocab_size = len(vocab)
+#         print('%d unique words found' % vocab_size)
+#         # Assign indices to each word.
+#         word_to_idx = { w: i for i, w in enumerate(vocab) }
+#         print(word_to_idx)
+#         idx_to_word = { i: w for i, w in enumerate(vocab) }
+#         network = NeuralNetwork(vocab_size,len(CATEGORIES),CATEGORIES)
+#         PredictedValue = network.predict(InputData)
+#         print(PredictedValue)
+#     else:
+#         break
     
