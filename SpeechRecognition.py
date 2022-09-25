@@ -1,33 +1,24 @@
-import vosk
-import sys
-import sounddevice as sd
-import queue
 import json
+import pyaudio
+from vosk import Model, KaldiRecognizer
 
-model = vosk.Model("model")
-samplerate = 16000
-device = 1
+model = Model('model')
+rec = KaldiRecognizer(model,16000)
+audio = pyaudio.PyAudio()
+stream = audio.open(format=pyaudio.paInt16,channels=1,rate=16000,input=True,frames_per_buffer=8000)
+stream.start_stream()
 
-q = queue.Queue()
+def listen():
+    while True:
+        data = stream.read(8000,exception_on_overflow=False)
+        if (rec.AcceptWaveform(data)) and (len(data) > 0):
+            answer = json.loads(rec.Result())
+            if answer['text']:
+                yield answer['text']
 
-
-def q_callback(indata, frames, time, status):
-    if status:
-        print(status, file=sys.stderr)
-    q.put(bytes(indata))
-
-
-def listen(callback):
-    with sd.RawInputStream(samplerate=samplerate, blocksize=8000, device=device, dtype='int16',
-                           channels=1, callback=q_callback):
-
-        rec = vosk.KaldiRecognizer(model, samplerate)
-        while True:
-            data = q.get()
-            print(data)
-            if rec.AcceptWaveform(data):
-                callback(json.loads(rec.Result())["text"])
-            #else:
-            #    print(rec.PartialResult())
-
-listen(q_callback)
+while True:
+    sayed_text = ''
+    for text in listen():
+        sayed_text.join(text)
+    if sayed_text == 'пока':
+        break

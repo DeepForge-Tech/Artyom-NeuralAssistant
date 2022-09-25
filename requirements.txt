@@ -28,3 +28,4 @@ tqdm==4.64.1
 typing_extensions==4.3.0
 urllib3==1.26.12
 vosk==0.3.42
+pyaudio
