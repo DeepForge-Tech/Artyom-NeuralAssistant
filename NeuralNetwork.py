@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from PreprocessingText import PreprocessingDataset
+from tqdm import trange
 import os
 import json
 from rich.progress import track,Progress
@@ -35,7 +36,7 @@ class NeuralNetwork:
         self.b1 = (np.random.rand(1, self.HIDDEN_LAYERS) - 0.5) * 2 * np.sqrt(1/self.INPUT_LAYERS)#np.zeros((self.HIDDEN_LAYERS, 1))
         self.b2 = (np.random.rand(1, self.OUTPUT_LAYERS) - 0.5) * 2 * np.sqrt(1/self.HIDDEN_LAYERS)#np.zeros((self.OUTPUT_LAYERS, 1))
         self.LossArray = []
-        self.accuracyArray = []
+        self.AccuracyArray = []
         self.Loss = 0
         self.Accuracy= 0
         self.LocalLoss = 0.5
@@ -71,6 +72,8 @@ class NeuralNetwork:
         self.OutputLayer = self.sigmoid(np.dot(self.InputLayer,self.w2) + self.b2)
         self.Output = self.OutputLayer
         self.Error = self.CrossEntropy(self.Output,Target)
+        if np.argmax(self.Output) == Target:
+            self.Accuracy += 1
         return self.Output
 
     def BackwardPropagation(self,Input,Target):
@@ -89,7 +92,7 @@ class NeuralNetwork:
     
     def train(self,TrainInput,TrainTarget):
         # bar = trange(EPOCHS,leave=True)
-        for epoch in  track(range(EPOCHS), description='[green]Processing data',style='bar.back',transient=True):
+        for epoch in  track(range(EPOCHS), description='[green]Processing data',style='bar.back',refresh_per_second=False):
             for Input,Target in zip(TrainInput,TrainTarget):
                 # print('Target')
                 # print(Target)
@@ -99,10 +102,26 @@ class NeuralNetwork:
 
                 # bar.set_description(f'Epoch: {epoch}/{EPOCHS}; Loss: {self.Error}')
             self.LossArray.append(self.Error)
+            self.AccuracyArray.append(self.Accuracy)
             # rich.do_step(epoch)
+        # График ошибок
+        plt.title('Train Loss')
         plt.plot(self.LossArray)
         plt.show()
-# print(TrainInput)
+        # График правильных предсказаний
+        plt.title('Train Accuracy')
+        plt.plot(self.AccuracyArray)
+        plt.show()
+    def save(self,PathParametrs = 'Artyom_NeuralAssistant.npz'):
+        np.savez_compressed(PathParametrs, self.w1,self.w2,self.b1,self.b2)
+
+    def open(self,PathParametrs = 'Artyom_NeuralAssistant.npz'):
+        ParametrsFile = np.load(PathParametrs)
+        self.w1 = ParametrsFile['arr_0']
+        self.w2 = ParametrsFile['arr_1']
+        self.b1 = ParametrsFile['arr_2']
+        self.b2 = ParametrsFile['arr_3']
+
 network = NeuralNetwork(len(TrainInput[0]))
 network.train(TrainInput,TrainTarget)
 
