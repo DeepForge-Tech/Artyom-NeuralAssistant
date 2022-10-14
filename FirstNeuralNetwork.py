@@ -1,131 +1,116 @@
-from sklearn.datasets import fetch_20newsgroups
+import random
 import numpy as np
-import pandas
-import os
-import json
 
-INPUT_DIM = 28
-HIDDEN_DIM = 128
-OUTPUT_DIM = 10
+INPUT_DIM = 4
+OUT_DIM = 3
+H_DIM = 512
 
-# Состояние выхода сети
-Output = 0
-#Состояние памяти 
-StateMemory = 0
-# Веса входа сети для входного гейта
-InputWeights = np.random.randn(INPUT_DIM, HIDDEN_DIM) / np.sqrt(INPUT_DIM / 2)
-# Веса выхода сети для входного гейта
-IGOutputWeights = np.random.randn(INPUT_DIM, HIDDEN_DIM) / np.sqrt(INPUT_DIM / 2)
-# Веса входа сети для гейта памяти
-IMInputWeights = np.random.randn(INPUT_DIM, HIDDEN_DIM) / np.sqrt(INPUT_DIM / 2)
-# Веса входа сети для гейта памяти
-IFGMemoryWeights = np.random.randn(INPUT_DIM, HIDDEN_DIM) / np.sqrt(INPUT_DIM / 2)
-# Веса выхода сети для гейта памяти
-FGOutputWeights = np.random.randn(INPUT_DIM, HIDDEN_DIM) / np.sqrt(INPUT_DIM / 2)
-# Веса состояние памяти сети для гейта памяти
-FGMemoryWeights = np.random.randn(INPUT_DIM, HIDDEN_DIM) / np.sqrt(INPUT_DIM / 2)
-# Веса входа сети для изменения памяти
-IEMemoryWeights = np.random.randn(INPUT_DIM, HIDDEN_DIM) / np.sqrt(INPUT_DIM / 2)
-# Веса выхода сети для изменения памяти
-EMoutputWeights = np.random.randn(INPUT_DIM, HIDDEN_DIM) / np.sqrt(INPUT_DIM / 2)
-# Веса входа сети для выходного гейта
-OGInputWeights = np.random.randn(INPUT_DIM, HIDDEN_DIM) / np.sqrt(INPUT_DIM / 2)
-# Веса выхода сети для выходного гейта
-OGOutputWeights = np.random.randn(INPUT_DIM, HIDDEN_DIM) / np.sqrt(INPUT_DIM / 2)
-# Веса состояние памяти сети для выходного гейта
-OGMemoryWeights = np.random.randn(INPUT_DIM, HIDDEN_DIM) / np.sqrt(INPUT_DIM / 2)
-# Порог вхождения
-learning_rate = 0.1
-ALPHA = 0.0002
-EPOCHS = 10000
-BATCH_SIZE = 100
+def relu(t):
+    return np.maximum(t, 0)
 
-LossArray = []
-
-# Функция активации значения входного гейта
-def sigmoid(array):
-  # Наша функция активации: f(x) = 1 / (1 + e^(-x))
-  return 1 / (1 + np.exp(-array))
-
-def softmax(array):
-    out = np.exp(array)
+def softmax(t):
+    out = np.exp(t)
     return out / np.sum(out)
 
-def cross_entropy(Prediction,Label):
-    entropy = Label * np.log(Prediction + 1e-6) # to prevent log value overflow
-    return -np.sum(entropy, axis=1, keepdims=True)
+def softmax_batch(t):
+    out = np.exp(t)
+    return out / np.sum(out, axis=1, keepdims=True)
 
-# Функция активации
-def tanh(array):
-    return np.tanh(array)
+def sparse_cross_entropy(z, y):
+    return -np.log(z[0, y])
 
-class Neuron():
-    def __init__(self,*args,**kwargs):
-        self.learning_rate = learning_rate
+def sparse_cross_entropy_batch(z, y):
+    return -np.log(np.array([z[j, y[j]] for j in range(len(y))]))
 
-    def CountInputGate(self,Input):
-        InputGate = sigmoid(InputWeights * Input + IGOutputWeights * Output + IMInputWeights * StateMemory + learning_rate)
-        return InputGate
+def to_full(y, num_classes):
+    y_full = np.zeros((1, num_classes))
+    y_full[0, y] = 1
+    return y_full
 
-    def CountForgetGate(self,Input,Output):
-        ForgetGate = sigmoid(IFGMemoryWeights * Input + FGOutputWeights * Output + FGMemoryWeights * StateMemory + self.learning_rate)
-        return ForgetGate
+def to_full_batch(y, num_classes):
+    y_full = np.zeros((len(y), num_classes))
+    for j, yj in enumerate(y):
+        y_full[j, yj] = 1
+    return y_full
 
-    def CountEditMemory(self,Input):
-        EditMemory = tanh(IEMemoryWeights * Input + EMoutputWeights * Output + self.learning_rate)
-        return EditMemory
+def relu_deriv(t):
+    return (t >= 0).astype(float)
 
-    def UpdateStateMemory(self,InputGate,ForgetGate,EditMemory,StateMemory):
-        StateMemory = EditMemory * InputGate + StateMemory * ForgetGate
-        return StateMemory
+from sklearn import datasets
+iris = datasets.load_iris()
+dataset = [(iris.data[i][None, ...], iris.target[i]) for i in range(len(iris.target))]
+print(dataset)
+W1 = np.random.rand(INPUT_DIM, H_DIM)
+b1 = np.random.rand(1, H_DIM)
+W2 = np.random.rand(H_DIM, OUT_DIM)
+b2 = np.random.rand(1, OUT_DIM)
 
-    def CountOutputGate(self,Input,Output,StateMemory):
-        OutputGate = sigmoid(OGInputWeights * Input + OGOutputWeights * Output + OGMemoryWeights * StateMemory + self.learning_rate)
-        return OutputGate
+W1 = (W1 - 0.5) * 2 * np.sqrt(1/INPUT_DIM)
+b1 = (b1 - 0.5) * 2 * np.sqrt(1/INPUT_DIM)
+W2 = (W2 - 0.5) * 2 * np.sqrt(1/H_DIM)
+b2 = (b2 - 0.5) * 2 * np.sqrt(1/H_DIM)
 
-    def CountOutput(self,StateMemory,OutputGate):
-        Output = tanh(StateMemory) * OutputGate
-        return Output
+ALPHA = 0.0002
+NUM_EPOCHS = 10000
+BATCH_SIZE = 50
 
-    def FeedForward(self,Input):
-        global StateMemory
-        global Output
-        InputGate = self.CountInputGate(Input)
-        ForgetGate = self.CountForgetGate(Input,Output)
-        EditMemory = self.CountEditMemory(Input)
-        StateMemory = self.UpdateStateMemory(InputGate,ForgetGate,EditMemory,StateMemory)
-        OutputGate = self.CountOutputGate(Input,Output,StateMemory)
-        Output = self.CountOutput(StateMemory,OutputGate)
-        return np.argmax(Output)
+loss_arr = []
 
-# Класс нейросети
-class NeuralNetwork():
-    def __init__(self,*args,**kwargs):
-        self.bias = learning_rate
-        self.h1 = Neuron(self.bias)
-        self.h2 = Neuron(self.bias)
-        self.h3 = Neuron(self.bias)
-        self.o1 = Neuron(self.bias)
+for ep in range(NUM_EPOCHS):
+    random.shuffle(dataset)
+    for i in range(len(dataset) // BATCH_SIZE):
 
-    def FeedForward(self,Input):
-        output_h1 = self.h1.FeedForward(Input)
-        output_h2 = self.h2.FeedForward(Input)
-        output_h3 = self.h3.FeedForward(Input)
-        output_o1 = self.o1.FeedForward(np.array([output_h1,output_h2,output_h3]))
+        batch_x, batch_y = zip(*dataset[i*BATCH_SIZE : i*BATCH_SIZE+BATCH_SIZE])
+        x = np.concatenate(batch_x, axis=0)
+        y = np.array(batch_y)
+        
+        # Forward
+        t1 = x @ W1 + b1
+        h1 = relu(t1)
+        t2 = h1 @ W2 + b2
+        z = softmax_batch(t2)
+        E = np.sum(sparse_cross_entropy_batch(z, y))
 
-        return output_o1
+        # Backward
+        y_full = to_full_batch(y, OUT_DIM)
+        dE_dt2 = z - y_full
+        dE_dW2 = h1.T @ dE_dt2
+        dE_db2 = np.sum(dE_dt2, axis=0, keepdims=True)
+        dE_dh1 = dE_dt2 @ W2.T
+        dE_dt1 = dE_dh1 * relu_deriv(t1)
+        dE_dW1 = x.T @ dE_dt1
+        dE_db1 = np.sum(dE_dt1, axis=0, keepdims=True)
 
-    def predict(self,text):
-        pass
-    
-    def train(self,dataset):
-        for epoch in range(EPOCHS):
-            Prediction = 1
-            Label = 1
-            Loss = np.sum(cross_entropy(Prediction,Label))
-            LossArray.append(Loss)
+        # Update
+        W1 = W1 - ALPHA * dE_dW1
+        b1 = b1 - ALPHA * dE_db1
+        W2 = W2 - ALPHA * dE_dW2
+        b2 = b2 - ALPHA * dE_db2
+        if E <=0.1:
+            print(E)
+            print(x)
+        loss_arr.append(E)
 
+def predict(x):
+    t1 = x @ W1 + b1
+    h1 = relu(t1)
+    t2 = h1 @ W2 + b2
+    z = softmax_batch(t2)
+    return z
 
-newsgroups_train = fetch_20newsgroups(subset='train')
-network = Neuron(0.0002)
-print(network.FeedForward(np.random.randn(INPUT_DIM, HIDDEN_DIM) / np.sqrt(INPUT_DIM / 2)))
+def calc_accuracy():
+    correct = 0
+    for x, y in dataset:
+        z = predict(x)
+        y_pred = np.argmax(z)
+        if y_pred == y:
+            correct += 1
+    acc = correct / len(dataset)
+    return acc
+
+accuracy = calc_accuracy()
+print("Accuracy:", accuracy)
+
+import matplotlib.pyplot as plt
+plt.plot(loss_arr)
+plt.show()

@@ -25,7 +25,7 @@ test_data = {}
 
 # Read data and setup maps for integer encoding and decoding.
 ProjectDir = os.getcwd()
-file = open('Datasets/MarcusDataset.json','r',encoding='utf-8')
+file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
 DataFile = json.load(file)
 train_data = DataFile['train_dataset']
 test_data = DataFile['test_dataset']
@@ -285,3 +285,14 @@ idx_to_word = { i: w for i, w in enumerate(vocab) }
 network = NeuralNetwork(vocab_size)
 
 network.predict('Как дела?')
+
+vocab = list(set([w for text in ['Музыка'] for w in text.split(' ')]))
+vocab_size = len(vocab)
+ 
+print('%d unique words found' % vocab_size)
+# Assign indices to each word.
+word_to_idx = { w: i for i, w in enumerate(vocab) }
+idx_to_word = { i: w for i, w in enumerate(vocab) }
+network = NeuralNetwork(vocab_size)
+
+network.predict('Музыка')

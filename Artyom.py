@@ -9,7 +9,7 @@ import sounddevice as sd
 import sys
 import pyaudio
 from vosk import Model, KaldiRecognizer
-import NeuralNetwork
+import NeuralNetwork_RNN_Test
 
 language = 'ru'
 model_id = 'ru_v3'
@@ -53,7 +53,12 @@ class ArtyomAssistant:
                 answer = json.loads(self.Recognition.Result())
                 if answer['text']:
                     yield answer['text']
-
+    def PreprocessingData(self,text):
+        PreprocessedList = list(set([w for w in text.split(' ')]))
+        LenghtData = len(PreprocessedList)
+        word_to_idx = { w: i for i, w in enumerate(PreprocessedList) }
+        idx_to_word = { i: w for i, w in enumerate(PreprocessedList) }
+        return PreprocessedList
     def start(self):
         for text in self.SpeechRecognition():
             print(text)
@@ -61,7 +66,8 @@ class ArtyomAssistant:
             vocab_size = len(vocab)
             word_to_idx = { w: i for i, w in enumerate(vocab) }
             idx_to_word = { i: w for i, w in enumerate(vocab) }
-            network = NeuralNetwork.NeuralNetwork(vocab_size,len(CATEGORIES),CATEGORIES,word_to_idx,idx_to_word)
+            self.PreprocessingData(text)
+            network = NeuralNetwork_RNN_Test.NeuralNetwork(vocab_size,len(CATEGORIES),CATEGORIES,word_to_idx,idx_to_word)
             network.load()
             PredictedValue = network.predict(text)
             print(PredictedValue)

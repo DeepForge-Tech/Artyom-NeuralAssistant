@@ -1,10 +1,10 @@
-from NeuralNetwork import *
+from NeuralNetwork_RNN_Test import *
 import os
 import json
 import random
 
 # Переменные
-EPOCHS = 50000
+EPOCHS = 25000
 CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes']
 train_data = {}
 test_data = {}
@@ -39,8 +39,29 @@ idx_to_word = { i: w for i, w in enumerate(vocab) }
 
 network = NeuralNetwork(vocab_size,len(CATEGORIES),CATEGORIES,word_to_idx,idx_to_word)
 network.train(EPOCHS,test_data,True)
-network.train(EPOCHS,test_data,False)
+# network.train(EPOCHS,test_data,False)
 
+InputData = 'Включи музыку'
+vocab = list(set([w for w in InputData.split(' ')]))
+vocab_size = len(vocab)
+print('%d unique words found' % vocab_size)
+# Assign indices to each word.
+word_to_idx = { w: i for i, w in enumerate(vocab) } 
+idx_to_word = { i: w for i, w in enumerate(vocab) }
+network = NeuralNetwork(vocab_size,len(CATEGORIES),CATEGORIES,word_to_idx,idx_to_word)
+PredictedValue = network.predict(InputData)
+print(PredictedValue)
+
+InputData = 'Добавь пожалуйста заметку'
+vocab = list(set([w for w in InputData.split(' ')]))
+vocab_size = len(vocab)
+print('%d unique words found' % vocab_size)
+# Assign indices to each word.
+word_to_idx = { w: i for i, w in enumerate(vocab) } 
+idx_to_word = { i: w for i, w in enumerate(vocab) }
+network = NeuralNetwork(vocab_size,len(CATEGORIES),CATEGORIES,word_to_idx,idx_to_word)
+PredictedValue = network.predict(InputData)
+print(PredictedValue)
 # file = open('Datasets/ArtyomNameDataset.json','r',encoding='utf-8')
 # DataFile = json.load(file)
 # train_data = DataFile['train_dataset']
