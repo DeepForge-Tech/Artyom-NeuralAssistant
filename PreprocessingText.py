@@ -4,10 +4,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import string
-from sklearn.feature_extraction.text import TfidfVectorizer,CountVectorizer
-import os
-import json
-from sklearn.linear_model import LogisticRegression
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 nltk.download('stopwords')
 

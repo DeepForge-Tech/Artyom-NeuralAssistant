@@ -20,6 +20,8 @@ TrainInput,TrainTarget = Preprocessing.Start(train_data,'train')
 TestInput,TestTarget = Preprocessing.Start(test_data,'test')
 TrainInput = np.squeeze(TrainInput)
 TrainTarget = np.array(TrainTarget)
+TestInput = np.squeeze(TestInput)
+TestTarget = np.array(TestTarget)
 CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes']
 
 class NeuralNetwork:
