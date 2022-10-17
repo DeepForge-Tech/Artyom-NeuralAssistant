@@ -6,7 +6,7 @@ import os
 import json
 from rich.progress import track,Progress
 
-EPOCHS = 10000
+EPOCHS = 50000
 learning_rate = 0.0002
 
 # Read data and setup maps for integer encoding and decoding.
@@ -16,8 +16,8 @@ DataFile = json.load(file)
 train_data = DataFile['train_dataset']
 test_data = DataFile['test_dataset']
 Preprocessing = PreprocessingDataset()
-TrainInput,TrainTarget = Preprocessing.Start(train_data,'train')
-TestInput,TestTarget = Preprocessing.Start(test_data,'test')
+TrainInput,TrainTarget = Preprocessing.Start(Dictionary = train_data,mode = 'train')
+TestInput,TestTarget = Preprocessing.Start(Dictionary = test_data,mode = 'test')
 TrainInput = np.squeeze(TrainInput)
 TrainTarget = np.array(TrainTarget)
 TestInput = np.squeeze(TestInput)
@@ -67,13 +67,14 @@ class NeuralNetwork:
     def CrossEntropy(self,PredictedValue,Target):
         return -np.log(PredictedValue[0, Target])
 
-    def FeedForwardPropagation(self,Input,Target):
+    def softmax(self,xs):
+        # Applies the Softmax Function to the input array.
+        return np.exp(xs) / sum(np.exp(xs))
+
+    def FeedForwardPropagation(self,Input):
         self.InputLayer = self.sigmoid(np.dot(Input,self.w1) + self.b1)
         self.OutputLayer = self.sigmoid(np.dot(self.InputLayer,self.w2) + self.b2)
         self.Output = self.OutputLayer
-        self.Error = self.CrossEntropy(self.Output,Target)
-        if np.argmax(self.Output) == Target:
-            self.Accuracy += 1
         return self.Output
 
     def BackwardPropagation(self,Input,Target):
@@ -91,39 +92,79 @@ class NeuralNetwork:
         self.w2 += d2_w2
     
     def train(self,TrainInput,TrainTarget):
-        # bar = trange(EPOCHS,leave=True)
-        for epoch in  track(range(EPOCHS), description='[green]Processing data',style='bar.back',refresh_per_second=False):
+        for epoch in  track(range(EPOCHS), description='[green]Processing data'):
+            self.Accuracy = 0
+            self.Error = 0
             for Input,Target in zip(TrainInput,TrainTarget):
-                # print('Target')
-                # print(Target)
-                OutputValue = self.FeedForwardPropagation(Input,Target)
-                PredictedValue = np.argmax(OutputValue)
+                OutputValue = self.FeedForwardPropagation(Input)
                 self.BackwardPropagation(Input,Target)
-
-                # bar.set_description(f'Epoch: {epoch}/{EPOCHS}; Loss: {self.Error}')
+                self.Error = self.CrossEntropy(self.Output,Target)
+                self.Accuracy += int(np.argmax(self.Output) == Target)
+                self.Accuracy = self.Accuracy / len(TrainInput[0])
+                if float(self.Error) <= self.LocalLoss and self.Accuracy >= self.LocalAccuracy:
+                    self.LocalLoss = self.Error
+                    self.LocalAccuracy = self.Accuracy
+                    print('Best model')
+                    self.save()
             self.LossArray.append(self.Error)
             self.AccuracyArray.append(self.Accuracy)
-            # rich.do_step(epoch)
         # График ошибок
         plt.title('Train Loss')
         plt.plot(self.LossArray)
         plt.show()
+        
         # График правильных предсказаний
         plt.title('Train Accuracy')
         plt.plot(self.AccuracyArray)
         plt.show()
-    def save(self,PathParametrs = 'Artyom_NeuralAssistant.npz'):
+    
+    def predict(self,Input):
+        OutputValue = self.FeedForwardPropagation(Input)
+        PredictedValue = np.argmax(OutputValue)
+        print(PredictedValue)
+        return PredictedValue
+
+    def save(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant.npz')):
         np.savez_compressed(PathParametrs, self.w1,self.w2,self.b1,self.b2)
 
-    def open(self,PathParametrs = 'Artyom_NeuralAssistant.npz'):
+    def open(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant.npz')):
         ParametrsFile = np.load(PathParametrs)
-        self.w1 = ParametrsFile['arr_0']
-        self.w2 = ParametrsFile['arr_1']
-        self.b1 = ParametrsFile['arr_2']
-        self.b2 = ParametrsFile['arr_3']
+        # w1 = ParametrsFile['arr_0']
+        # w2 = ParametrsFile['arr_1']
+        # b1 = ParametrsFile['arr_2']
+        # b2 = ParametrsFile['arr_3']
+        for n in range(int(self.HIDDEN_LAYERS)):
+            for i in range(self.HIDDEN_LAYERS):
+                if (0 <= n) and (n < len(self.w1)):
+                    if (0 <= i) and (i < len(self.w1[n])):
+                        self.w1[n][i] = ParametrsFile['arr_0'][n][i]
+                if (0 <= n) and (n < len(self.w2)):
+                    if (0 <= i) and (i < len(self.w2[n])):
+                        self.w2[n][i] = ParametrsFile['arr_1'][n][i]
+                if (0 <= n) and (n < len(self.b1)):
+                    if (0 <= i) and (i < len(self.b1[n])):
+                        self.b1[n][i] = ParametrsFile['arr_2'][n][i]
+                # if (0 <= n) and (n < len(self.b2)):
+                #     if (0 <= i) and (i < len(self.b2[n])):
+                #         self.b2[n][i] = ParametrsFile['arr_3'][n][i]
+        print('W1')
+        print(self.w1)
+        print('Parametrs W1')
+        print(ParametrsFile['arr_0'])
+        
 
 network = NeuralNetwork(len(TrainInput[0]))
 network.train(TrainInput,TrainTarget)
-
 network = NeuralNetwork(len(TestInput[0]))
 network.train(TestInput,TestTarget)
+while True:
+    command = input('>>>')
+    if command == 'exit':
+        break
+    else:
+        Test = [command]
+        Test = Preprocessing.Start(PredictArray=Test,mode = 'predict')
+        Test = np.squeeze(Test)
+        network = NeuralNetwork(len(Test))
+        network.open()
+        network.predict(Test)

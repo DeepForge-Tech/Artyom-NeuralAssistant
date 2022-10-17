@@ -17,47 +17,56 @@ test = {
 }
 
 class PreprocessingDataset:
-    def __init__(self,):
+    def __init__(self):
         self.Dictionary = {}
         self.TrainInput = []
         self.TrainTarget = []
         self.TestInput = []
         self.TestTarget = []
+        self.PredictInput = []
+        self.PredictArray = []
         self.Mode = 'train'
 
-    def Start(self,Dictionary:dict,mode = 'train'):
-        self.Dictionary = Dictionary
+    def Start(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
         self.Mode = mode
-        self.Dictionary = list(self.Dictionary.items())
-        suggestions = []
-        for Input, Target in self.Dictionary:
-            Input = Input.lower()
-            Input = re.sub(r'\d+', '', Input)
-            translator = str.maketrans('', '', string.punctuation)
-            Input = Input.translate(translator)
-            # Input = " ".join(Input.split())
-            # stop_words = set(stopwords.words("russian"))
-            # word_tokens = word_tokenize(Input)
-            # Input = [word for word in word_tokens if word not in stop_words]
-            suggestions.append(Input)
-            if self.Mode == 'train':
-                self.TrainTarget.append(int(Target))
-            elif self.Mode == 'test':
-                self.TestTarget.append(int(Target))
-        # print(suggestions)
+        if self.Mode == 'train' or self.Mode == 'test':
+            self.Dictionary = Dictionary
+            self.Dictionary = list(self.Dictionary.items())
+            suggestions = []
+            for Input, Target in self.Dictionary:
+                Input = Input.lower()
+                Input = re.sub(r'\d+', '', Input)
+                translator = str.maketrans('', '', string.punctuation)
+                Input = Input.translate(translator)
+                suggestions.append(Input)
+                if self.Mode == 'train':
+                    self.TrainTarget.append(int(Target))
+                elif self.Mode == 'test':
+                    self.TestTarget.append(int(Target))
+        elif self.Mode == 'predict':
+            self.PredictArray = PredictArray
+            suggestions = []
+            for Input in self.PredictArray:
+                Input = Input.lower()
+                Input = re.sub(r'\d+', '', Input)
+                translator = str.maketrans('', '', string.punctuation)
+                Input = Input.translate(translator)
+                suggestions.append(Input)
         vectorizer = TfidfVectorizer(max_features=1500, min_df=0, max_df=2)
         vectorizer = vectorizer.fit_transform(suggestions)
-        # vectorizer.transform(Input)
         VectorizedData = vectorizer.toarray()
         if self.Mode == 'train':
             self.TrainInput.append(VectorizedData)
         elif self.Mode == 'test':
             self.TestInput.append(VectorizedData)
-        # print(vectorizer.toarray())
+        elif self.Mode == 'predict':
+            self.PredictInput.append(VectorizedData)
         if self.Mode == 'train':
             return self.TrainInput,self.TrainTarget
         elif self.Mode == 'test':
             return self.TestInput,self.TestTarget
+        elif self.Mode == 'predict':
+            return self.PredictInput
 
 # Read data and setup maps for integer encoding and decoding.
 # ProjectDir = os.getcwd()
