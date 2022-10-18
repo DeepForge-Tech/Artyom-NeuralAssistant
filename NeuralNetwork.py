@@ -1,27 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from PreprocessingText import PreprocessingDataset
-from tqdm import trange
 import os
-import json
-from rich.progress import track,Progress
+from PreprocessingText import PreprocessingDataset
+from rich.progress import track
 
 EPOCHS = 50000
 learning_rate = 0.0002
-
-# Read data and setup maps for integer encoding and decoding.
 ProjectDir = os.getcwd()
-file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
-DataFile = json.load(file)
-train_data = DataFile['train_dataset']
-test_data = DataFile['test_dataset']
 Preprocessing = PreprocessingDataset()
-TrainInput,TrainTarget = Preprocessing.Start(Dictionary = train_data,mode = 'train')
-TestInput,TestTarget = Preprocessing.Start(Dictionary = test_data,mode = 'test')
-TrainInput = np.squeeze(TrainInput)
-TrainTarget = np.array(TrainTarget)
-TestInput = np.squeeze(TestInput)
-TestTarget = np.array(TestTarget)
 CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes']
 
 class NeuralNetwork:
@@ -101,10 +87,10 @@ class NeuralNetwork:
                 self.Error = self.CrossEntropy(self.Output,Target)
                 self.Accuracy += int(np.argmax(self.Output) == Target)
                 self.Accuracy = self.Accuracy / len(TrainInput[0])
-                if float(self.Error) <= self.LocalLoss and self.Accuracy >= self.LocalAccuracy:
+                if float(self.Error) <= self.LocalLoss:
                     self.LocalLoss = self.Error
                     self.LocalAccuracy = self.Accuracy
-                    print('Best model')
+                    # print('Best model')
                     self.save()
             self.LossArray.append(self.Error)
             self.AccuracyArray.append(self.Accuracy)
@@ -152,19 +138,18 @@ class NeuralNetwork:
         print('Parametrs W1')
         print(ParametrsFile['arr_0'])
         
+def TestPredict():
+    while True:
+        command = input('>>>')
+        if command == 'exit':
+            break
+        else:
+            Test = [command]
+            Test = Preprocessing.Start(PredictArray=Test,mode = 'predict')
+            Test = np.squeeze(Test)
+            network = NeuralNetwork(len(Test))
+            network.open()
+            network.predict(Test)
 
-network = NeuralNetwork(len(TrainInput[0]))
-network.train(TrainInput,TrainTarget)
-network = NeuralNetwork(len(TestInput[0]))
-network.train(TestInput,TestTarget)
-while True:
-    command = input('>>>')
-    if command == 'exit':
-        break
-    else:
-        Test = [command]
-        Test = Preprocessing.Start(PredictArray=Test,mode = 'predict')
-        Test = np.squeeze(Test)
-        network = NeuralNetwork(len(Test))
-        network.open()
-        network.predict(Test)
+if __name__ == '__main__':
+    TestPredict()
