@@ -3,8 +3,10 @@ import matplotlib.pyplot as plt
 import os
 from PreprocessingText import PreprocessingDataset
 from rich.progress import track
+import mplcyberpunk
 
-EPOCHS = 50000
+plt.style.use("cyberpunk")
+EPOCHS = 100
 learning_rate = 0.0002
 ProjectDir = os.getcwd()
 Preprocessing = PreprocessingDataset()
@@ -78,7 +80,7 @@ class NeuralNetwork:
         self.w2 += d2_w2
     
     def train(self,TrainInput,TrainTarget):
-        for epoch in  track(range(EPOCHS), description='[green]Processing data'):
+        for epoch in  track(range(EPOCHS), description='[green]Training model'):
             self.Accuracy = 0
             self.Error = 0
             for Input,Target in zip(TrainInput,TrainTarget):
@@ -87,7 +89,7 @@ class NeuralNetwork:
                 self.Error = self.CrossEntropy(self.Output,Target)
                 self.Accuracy += int(np.argmax(self.Output) == Target)
                 self.Accuracy = self.Accuracy / len(TrainInput[0])
-                if float(self.Error) <= self.LocalLoss:
+                if float(self.Error) <= self.LocalLoss and np.argmax(self.Output) == Target:
                     self.LocalLoss = self.Error
                     self.LocalAccuracy = self.Accuracy
                     # print('Best model')
@@ -97,12 +99,13 @@ class NeuralNetwork:
         # График ошибок
         plt.title('Train Loss')
         plt.plot(self.LossArray)
-        plt.show()
+        plt.savefig(os.path.join(ProjectDir,'Graphics','Loss.png'))
+        # plt.show()
         
-        # График правильных предсказаний
-        plt.title('Train Accuracy')
-        plt.plot(self.AccuracyArray)
-        plt.show()
+        # # График правильных предсказаний
+        # plt.title('Train Accuracy')
+        # plt.plot(self.AccuracyArray)
+        # plt.show()
     
     def predict(self,Input):
         OutputValue = self.FeedForwardPropagation(Input)
