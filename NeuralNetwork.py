@@ -24,11 +24,8 @@ class NeuralNetwork:
         self.b1 = (np.random.rand(1, self.HIDDEN_LAYERS) - 0.5) * 2 * np.sqrt(1/self.INPUT_LAYERS)#np.zeros((self.HIDDEN_LAYERS, 1))
         self.b2 = (np.random.rand(1, self.OUTPUT_LAYERS) - 0.5) * 2 * np.sqrt(1/self.HIDDEN_LAYERS)#np.zeros((self.OUTPUT_LAYERS, 1))
         self.LossArray = []
-        self.AccuracyArray = []
         self.Loss = 0
-        self.Accuracy= 0
         self.LocalLoss = 0.5
-        self.LocalAccuracy = 1.0
 
     def sigmoid(self,x):
         return 1 / (1 + np.exp(-x))
@@ -81,30 +78,20 @@ class NeuralNetwork:
     
     def train(self,TrainInput,TrainTarget):
         for epoch in  track(range(EPOCHS), description='[green]Training model'):
-            self.Accuracy = 0
             self.Error = 0
             for Input,Target in zip(TrainInput,TrainTarget):
                 OutputValue = self.FeedForwardPropagation(Input)
                 self.BackwardPropagation(Input,Target)
                 self.Error = self.CrossEntropy(self.Output,Target)
-                self.Accuracy += int(np.argmax(self.Output) == Target)
-                self.Accuracy = self.Accuracy / len(TrainInput[0])
                 if float(self.Error) <= self.LocalLoss and np.argmax(self.Output) == Target:
                     self.LocalLoss = self.Error
-                    self.LocalAccuracy = self.Accuracy
                     # print('Best model')
                     self.save()
             self.LossArray.append(self.Error)
-            self.AccuracyArray.append(self.Accuracy)
         # График ошибок
         plt.title('Train Loss')
         plt.plot(self.LossArray)
         plt.savefig(os.path.join(ProjectDir,'Graphics','Loss.png'))
-        # plt.show()
-        
-        # # График правильных предсказаний
-        # plt.title('Train Accuracy')
-        # plt.plot(self.AccuracyArray)
         # plt.show()
     
     def predict(self,Input):
@@ -118,10 +105,6 @@ class NeuralNetwork:
 
     def open(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant.npz')):
         ParametrsFile = np.load(PathParametrs)
-        # w1 = ParametrsFile['arr_0']
-        # w2 = ParametrsFile['arr_1']
-        # b1 = ParametrsFile['arr_2']
-        # b2 = ParametrsFile['arr_3']
         for n in range(int(self.HIDDEN_LAYERS)):
             for i in range(self.HIDDEN_LAYERS):
                 if (0 <= n) and (n < len(self.w1)):
