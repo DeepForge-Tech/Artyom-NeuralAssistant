@@ -52,7 +52,7 @@ class PreprocessingDataset:
                 translator = str.maketrans('', '', string.punctuation)
                 Input = Input.translate(translator)
                 suggestions.append(Input)
-        vectorizer = TfidfVectorizer(max_features=1500, min_df=0, max_df=2)
+        vectorizer = TfidfVectorizer(max_features=1500, min_df=0, max_df=9)
         vectorizer = vectorizer.fit_transform(suggestions)
         VectorizedData = vectorizer.toarray()
         if self.Mode == 'train':
