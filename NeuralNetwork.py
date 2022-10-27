@@ -10,7 +10,7 @@ EPOCHS = 100000
 learning_rate = 0.0002
 ProjectDir = os.getcwd()
 Preprocessing = PreprocessingDataset()
-CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes']
+CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude']
 
 class NeuralNetwork:
     def __init__(self,LENGHT_DATA):
@@ -18,7 +18,7 @@ class NeuralNetwork:
         print(self.LENGHT_DATA)
         self.INPUT_LAYERS = self.LENGHT_DATA
         self.HIDDEN_LAYERS = self.LENGHT_DATA
-        self.OUTPUT_LAYERS = 9
+        self.OUTPUT_LAYERS = len(CATEGORIES)
         self.w1 = (np.random.rand(self.INPUT_LAYERS, self.HIDDEN_LAYERS) - 0.5) * 2 * np.sqrt(1/self.INPUT_LAYERS)#np.random.normal(0.0, pow(self.INPUT_LAYERS, -0.5), (self.HIDDEN_LAYERS, self.INPUT_LAYERS))
         self.w2 = (np.random.rand(self.HIDDEN_LAYERS, self.OUTPUT_LAYERS) - 0.5) * 2 * np.sqrt(1/self.HIDDEN_LAYERS)#np.random.normal(0.0, pow(self.HIDDEN_LAYERS, -0.5), (self.OUTPUT_LAYERS, self.HIDDEN_LAYERS))
         self.b1 = (np.random.rand(1, self.HIDDEN_LAYERS) - 0.5) * 2 * np.sqrt(1/self.INPUT_LAYERS)#np.zeros((self.HIDDEN_LAYERS, 1))
