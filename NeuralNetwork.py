@@ -10,7 +10,7 @@ EPOCHS = 100000
 learning_rate = 0.0002
 ProjectDir = os.getcwd()
 Preprocessing = PreprocessingDataset()
-CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','secundomer','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music']
+CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music']
 
 class NeuralNetwork:
     def __init__(self,LENGHT_DATA):
@@ -123,7 +123,9 @@ class NeuralNetwork:
         print(self.w1)
         print('Parametrs W1')
         print(ParametrsFile['arr_0'])
-        
+    
+    
+
 def TestPredict():
     while True:
         command = input('>>>')
@@ -132,7 +134,7 @@ def TestPredict():
         else:
             Test = [command]
             Test = Preprocessing.Start(PredictArray=Test,mode = 'predict')
-            Test = np.squeeze(Test)
+            Test = Preprocessing.ToMatrix(Test)
             network = NeuralNetwork(len(Test))
             network.open()
             network.predict(Test)

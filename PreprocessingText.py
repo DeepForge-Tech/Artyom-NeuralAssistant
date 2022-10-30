@@ -27,6 +27,12 @@ class PreprocessingDataset:
         self.PredictArray = []
         self.Mode = 'train'
 
+    def ToMatrix(self,array):
+        return np.squeeze(array)
+
+    def ToNumpyArray(self,array):
+        return np.array(array)
+
     def Start(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
         self.Mode = mode
         if self.Mode == 'train' or self.Mode == 'test':

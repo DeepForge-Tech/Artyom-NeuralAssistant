@@ -1,9 +1,7 @@
 from NeuralNetwork import NeuralNetwork
 import os
 import json
-import numpy
 from PreprocessingText import PreprocessingDataset
-import numpy as np
 
 # Initialization parametrs
 # Read data and setup maps for integer encoding and decoding.
@@ -15,10 +13,10 @@ test_data = DataFile['test_dataset']
 Preprocessing = PreprocessingDataset()
 TrainInput,TrainTarget = Preprocessing.Start(Dictionary = train_data,mode = 'train')
 TestInput,TestTarget = Preprocessing.Start(Dictionary = test_data,mode = 'test')
-TrainInput = np.squeeze(TrainInput)
-TrainTarget = np.array(TrainTarget)
-TestInput = np.squeeze(TestInput)
-TestTarget = np.array(TestTarget)
+TrainInput = Preprocessing.ToMatrix(TrainInput)
+TrainTarget = Preprocessing.ToNumpyArray(TrainTarget)
+TestInput = Preprocessing.ToMatrix(TestInput)
+TestTarget = Preprocessing.ToNumpyArray(TestTarget)
 
 def Train():
     network = NeuralNetwork(len(TrainInput[0]))

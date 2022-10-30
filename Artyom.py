@@ -98,7 +98,7 @@ class ArtyomAssistant:
 
                     # Input = [text]
                     # Input = Preprocessing.Start(PredictArray=Input,mode = 'predict')
-                    # Input = np.squeeze(Input)
+                    # Input = Preprocessing.ToMatrix(Input)
                     # network = NeuralNetwork(len(Input))
                     # network.open()
                     # PredictedValue = network.predict(Input)
