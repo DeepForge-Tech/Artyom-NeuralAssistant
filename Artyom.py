@@ -2,14 +2,19 @@ import time
 import random
 import os
 import json
-import fuzzywuzzy
 import torch
 import webbrowser
 import sounddevice as sd
 import sys
 import pyaudio
 from vosk import Model, KaldiRecognizer
-import NeuralNetwork_RNN_Test
+from PreprocessingText import PreprocessingDataset
+from NeuralNetwork import NeuralNetwork
+import numpy as np
+import geocoder
+from geopy.geocoders import Nominatim
+from pyowm import OWM
+from num2words import num2words
 
 language = 'ru'
 model_id = 'ru_v3'
@@ -18,11 +23,19 @@ speaker = 'aidar' # aidar, baya, kseniya, xenia, random
 put_accent = True
 put_yo = True
 device = torch.device('cpu') # cpu или gpu
+Preprocessing = PreprocessingDataset() 
+owm = OWM('2221d769ed67828e858caaa3803161ea')
 
-CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes']
+NAMES = ['Артём','Артемий','Артёша','Артемьюшка','Артя','Артюня','Артюха','Артюша','Артёмка','Артёмчик']
+CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music']
+
+file = open('ArtyomAnswers.json','r',encoding='utf-8')
+ANSWERS  = json.load(file)
+file.close()
 
 class ArtyomAssistant:
     def __init__(self):
+        self.Functions = {'communication':self.CommunicationCommand,'weather':self.WeatherCommand,'time':self.TimeManager}
         self.RecognitionModel = Model('model')
         self.Recognition = KaldiRecognizer(self.RecognitionModel,16000)
         self.RecognitionAudio = pyaudio.PyAudio()
@@ -34,7 +47,7 @@ class ArtyomAssistant:
                           language=language,
                           speaker=model_id)
         self.model.to(device)
-    
+
     def Tell(self,text: str):
         audio = self.model.apply_tts(text=text+"..",
                                 speaker=speaker,
@@ -53,25 +66,48 @@ class ArtyomAssistant:
                 answer = json.loads(self.Recognition.Result())
                 if answer['text']:
                     yield answer['text']
-    def PreprocessingData(self,text):
-        PreprocessedList = list(set([w for w in text.split(' ')]))
-        LenghtData = len(PreprocessedList)
-        word_to_idx = { w: i for i, w in enumerate(PreprocessedList) }
-        idx_to_word = { i: w for i, w in enumerate(PreprocessedList) }
-        return PreprocessedList
-    def start(self):
+    
+    def CommunicationCommand(self):
+        self.Tell(random.choice(ANSWERS['communication']))
+    
+    def WeatherCommand(self,WithInternet:bool=False):
+        geolocation = geocoder.ip('me')
+        coordinates = geolocation.latlng
+        location = str(location.address.split(',')[4]).lower()
+        mgr = owm.weather_manager()
+        one_call = mgr.one_call(lat=coordinates[0], lon=coordinates[1])
+        temp = one_call.current.temperature('celsius')['temp']  # {'temp_max': 10.5, 'temp': 9.7, 'temp_min': 9.0}
+        print(temp)
+        self.Tell('Сейчас {} градусов по цельсию'.format(num2words(int(temp), lang='ru')))
+    
+    def TimeManager(self):
+        hours = num2words(int(time.strftime('%H')), lang='ru')
+        minutes = num2words(int(time.strftime('%M')), lang='ru')
+        self.Tell(f'Сейчас {hours} {minutes}')
+
+    def CommandManager(self,PredictedValue):
+        operation = CATEGORIES[PredictedValue]
+        self.Functions[operation]()
+
+    def Start(self):
         for text in self.SpeechRecognition():
             print(text)
-            vocab = list(set([w for w in text.split(' ')]))
-            vocab_size = len(vocab)
-            word_to_idx = { w: i for i, w in enumerate(vocab) }
-            idx_to_word = { i: w for i, w in enumerate(vocab) }
-            self.PreprocessingData(text)
-            network = NeuralNetwork_RNN_Test.NeuralNetwork(vocab_size,len(CATEGORIES),CATEGORIES,word_to_idx,idx_to_word)
-            network.load()
-            PredictedValue = network.predict(text)
-            print(PredictedValue)
+            for name in NAMES:
+                if name.lower() in text and len(text.split()) > 1:
+                    print('hello')
 
+                    # Input = [text]
+                    # Input = Preprocessing.Start(PredictArray=Input,mode = 'predict')
+                    # Input = np.squeeze(Input)
+                    # network = NeuralNetwork(len(Input))
+                    # network.open()
+                    # PredictedValue = network.predict(Input)
+                    self.CommandManager(10)
+                    break
+                elif name.lower() in text and len(text.split()) == 1:
+                    self.Tell('Чем могу помочь?')
+                    break
+                
 if __name__ == '__main__':
     Artyom = ArtyomAssistant()
-    Artyom.start()
+    Artyom.Start()

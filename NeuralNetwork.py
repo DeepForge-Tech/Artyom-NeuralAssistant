@@ -10,7 +10,7 @@ EPOCHS = 100000
 learning_rate = 0.0002
 ProjectDir = os.getcwd()
 Preprocessing = PreprocessingDataset()
-CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude']
+CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','secundomer','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music']
 
 class NeuralNetwork:
     def __init__(self,LENGHT_DATA):
@@ -116,9 +116,9 @@ class NeuralNetwork:
                 if (0 <= n) and (n < len(self.b1)):
                     if (0 <= i) and (i < len(self.b1[n])):
                         self.b1[n][i] = ParametrsFile['arr_2'][n][i]
-                # if (0 <= n) and (n < len(self.b2)):
-                #     if (0 <= i) and (i < len(self.b2[n])):
-                #         self.b2[n][i] = ParametrsFile['arr_3'][n][i]
+                if (0 <= n) and (n < len(self.b2)):
+                    if (0 <= i) and (i < len(self.b2[n])):
+                        self.b2[n][i] = ParametrsFile['arr_3'][n][i]
         print('W1')
         print(self.w1)
         print('Parametrs W1')
