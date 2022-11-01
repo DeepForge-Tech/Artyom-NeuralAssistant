@@ -1,3 +1,4 @@
+# Импортирование необходмых модулей
 import time
 import random
 import os
@@ -10,12 +11,13 @@ import pyaudio
 from vosk import Model, KaldiRecognizer
 from PreprocessingText import PreprocessingDataset
 from NeuralNetwork import NeuralNetwork
-import numpy as np
 import geocoder
-from geopy.geocoders import Nominatim
 from pyowm import OWM
 from num2words import num2words
+import threading
+from MusicManager import MusicManager
 
+# Инициализация параметров
 language = 'ru'
 model_id = 'ru_v3'
 sample_rate = 48000 # 48000
@@ -23,19 +25,19 @@ speaker = 'aidar' # aidar, baya, kseniya, xenia, random
 put_accent = True
 put_yo = True
 device = torch.device('cpu') # cpu или gpu
+MusicManager = MusicManager()
 Preprocessing = PreprocessingDataset() 
 owm = OWM('2221d769ed67828e858caaa3803161ea')
-
-NAMES = ['Артём','Артемий','Артёша','Артемьюшка','Артя','Артюня','Артюха','Артюша','Артёмка','Артёмчик']
-CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music']
-
+ProjectDir = os.path.dirname(os.path.realpath(__file__))
+NAMES = ['Артём','Артемий','Артёша','Артемьюшка','Артя','Артюня','Артюха','Артюша','Артёмка','Артёмчик','Тёма']
+CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music','pause-music','unpause-music']
 file = open('ArtyomAnswers.json','r',encoding='utf-8')
 ANSWERS  = json.load(file)
 file.close()
 
 class ArtyomAssistant:
     def __init__(self):
-        self.Functions = {'communication':self.CommunicationCommand,'weather':self.WeatherCommand,'time':self.TimeManager}
+        self.Functions = {'communication':self.CommunicationCommand,'weather':self.WeatherCommand,'time':self.TimeCommand}
         self.RecognitionModel = Model('model')
         self.Recognition = KaldiRecognizer(self.RecognitionModel,16000)
         self.RecognitionAudio = pyaudio.PyAudio()
@@ -67,7 +69,7 @@ class ArtyomAssistant:
                 if answer['text']:
                     yield answer['text']
     
-    def CommunicationCommand(self):
+    def MainCommunicationCommand(self):
         self.Tell(random.choice(ANSWERS['communication']))
     
     def WeatherCommand(self,WithInternet:bool=False):
@@ -80,11 +82,33 @@ class ArtyomAssistant:
         print(temp)
         self.Tell('Сейчас {} градусов по цельсию'.format(num2words(int(temp), lang='ru')))
     
-    def TimeManager(self):
+    def TimeCommand(self):
         hours = num2words(int(time.strftime('%H')), lang='ru')
         minutes = num2words(int(time.strftime('%M')), lang='ru')
         self.Tell(f'Сейчас {hours} {minutes}')
 
+    def MusicCommand(self,command):
+        if command == 'play':
+            if MusicManager.PausedMusic == True and MusicManager.PlayingMusic == False:
+                MusicManager.PlayMusic()
+            elif MusicManager.PausedMusic == False and MusicManager.PlayingMusic == True:
+                self.Tell(random.choice(ANSWERS['play-music']))
+        elif command == 'stop':
+            if MusicManager.PausedMusic == False and MusicManager.PlayingMusic == True:
+                MusicManager.StopMusic()
+            elif MusicManager.PausedMusic == True and MusicManager.PlayingMusic == False:
+                self.Tell(random.choice(ANSWERS['stop-music']))
+        elif command == 'pause':
+            if MusicManager.PausedMusic == False and MusicManager.PlayingMusic == True:
+                MusicManager.PauseMusic()
+            elif MusicManager.PausedMusic == True and MusicManager.PlayingMusic == False:
+                self.Tell(random.choice(ANSWERS['pause-music']))
+        elif command == 'unpause':
+            if MusicManager.PausedMusic == True and MusicManager.PlayingMusic == False:
+                MusicManager.UnpauseMusic()
+            elif MusicManager.PausedMusic == False and MusicManager.PlayingMusic == True:
+                self.Tell(random.choice(ANSWERS['unpause-music']))
+                
     def CommandManager(self,PredictedValue):
         operation = CATEGORIES[PredictedValue]
         self.Functions[operation]()
@@ -95,7 +119,6 @@ class ArtyomAssistant:
             for name in NAMES:
                 if name.lower() in text and len(text.split()) > 1:
                     print('hello')
-
                     # Input = [text]
                     # Input = Preprocessing.Start(PredictArray=Input,mode = 'predict')
                     # Input = Preprocessing.ToMatrix(Input)
