@@ -10,12 +10,11 @@ EPOCHS = 100000
 learning_rate = 0.0002
 ProjectDir = os.getcwd()
 Preprocessing = PreprocessingDataset()
-CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music','pause-music','unpause-music']
+CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music','pause-music','unpause-music','shutdown','reboot','hibernation']
 
 class NeuralNetwork:
     def __init__(self,LENGHT_DATA):
         self.LENGHT_DATA = LENGHT_DATA
-        print(self.LENGHT_DATA)
         self.INPUT_LAYERS = self.LENGHT_DATA
         self.HIDDEN_LAYERS = self.LENGHT_DATA
         self.OUTPUT_LAYERS = len(CATEGORIES)

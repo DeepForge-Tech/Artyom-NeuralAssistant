@@ -1,7 +1,6 @@
 # Импортирование необходимых модулей
 import pygame
 import os
-
 # Инициализация параметров
 pygame.mixer.init(96000, -16, 2, 8192)
 pygame.mixer.music.set_volume(2.0)
@@ -16,21 +15,28 @@ class MusicManager:
         self.MusicNumber = 0
         self.PausedMusic = False
         self.PlayingMusic = False
+        self.StoppedMusic = False
 
     def StopMusic(self):
-        pass
+        pygame.mixer.music.stop()
+        self.StoppedMusic = True
+        self.PlayingMusic = False
+        self.PausedMusic = False
 
     def PauseMusic(self):
-        if self.PausedMusic == False and self.PlayingMusic == True:
-            pygame.mixer.music.pause
+        pygame.mixer.music.pause()
+        self.PausedMusic = True
+        self.PlayingMusic = False
 
     def UnpauseMusic(self):
-        pass
+        pygame.mixer.music.unpause()
+        self.PausedMusic = False
+        self.PlayingMusic = True
 
     def PlayMusic(self):
         for dir, subdir, files in os.walk(MusicPath):
             for file in files:
-                print(os.path.join(dir, file))
+                # print(os.path.join(dir, file))
                 file = os.path.normpath( os.path.join(dir, file))
                 format = os.path.splitext(os.path.join(dir, file))[1]
                 for MusicFormat in MusicFormats:
@@ -42,3 +48,17 @@ class MusicManager:
             while pygame.mixer.music.get_busy():
                 pos = pygame.mixer.music.get_pos()/ 1000
             self.MusicNumber += 1
+
+# if __name__ == "__main__":
+#     manager = MusicManager()
+#     thread = threading.Thread(target=manager.PlayMusic)
+#     thread.start()
+#     while True:
+#         command = input(">>>")
+#         print(command)
+#         if command == 'pause':
+#             pygame.mixer.music.pause()
+#         elif command == 'unpause':
+#             pygame.mixer.music.unpause()
+#         elif command == 'stop':
+#             pygame.mixer.music.stop()

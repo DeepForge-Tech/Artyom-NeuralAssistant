@@ -5,6 +5,10 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 import string
 from sklearn.feature_extraction.text import TfidfVectorizer
+import random
+import os
+import json
+from gensim.parsing.preprocessing import remove_stopwords
 
 nltk.download('stopwords')
 
@@ -36,14 +40,19 @@ class PreprocessingDataset:
     def Start(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
         self.Mode = mode
         if self.Mode == 'train' or self.Mode == 'test':
-            self.Dictionary = Dictionary
+            LocalDictionary = list(Dictionary.items())
+            random.shuffle(LocalDictionary)
+            self.Dictionary = dict(LocalDictionary)
             self.Dictionary = list(self.Dictionary.items())
             suggestions = []
             for Input, Target in self.Dictionary:
                 Input = Input.lower()
+                Input = remove_stopwords(Input)
+                print(Input)
                 Input = re.sub(r'\d+', '', Input)
                 translator = str.maketrans('', '', string.punctuation)
                 Input = Input.translate(translator)
+                print(Input)
                 suggestions.append(Input)
                 if self.Mode == 'train':
                     self.TrainTarget.append(int(Target))
@@ -80,7 +89,7 @@ class PreprocessingDataset:
 # DataFile = json.load(file)
 # train_data = DataFile['train_dataset']
 # test_data = DataFile['test_dataset']
-# Preprocessing = PreProcessingDataset()
+# Preprocessing = PreprocessingDataset()
 # TrainInput,TrainTarget = Preprocessing.Start(train_data,'train')
 # TestInput,TestTarget = Preprocessing.Start(test_data,'test')
 # clf = LogisticRegression(random_state=0).fit(TrainInput, TrainTarget)

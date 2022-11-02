@@ -30,14 +30,17 @@ Preprocessing = PreprocessingDataset()
 owm = OWM('2221d769ed67828e858caaa3803161ea')
 ProjectDir = os.path.dirname(os.path.realpath(__file__))
 NAMES = ['Артём','Артемий','Артёша','Артемьюшка','Артя','Артюня','Артюха','Артюша','Артёмка','Артёмчик','Тёма']
-CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music','pause-music','unpause-music']
+CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music','pause-music','unpause-music','shutdown','reboot','hibernation']
 file = open('ArtyomAnswers.json','r',encoding='utf-8')
 ANSWERS  = json.load(file)
 file.close()
 
 class ArtyomAssistant:
     def __init__(self):
-        self.Functions = {'communication':self.CommunicationCommand,'weather':self.WeatherCommand,'time':self.TimeCommand}
+        self.Functions = {
+            'communication':self.CommunicationCommand,'weather':self.WeatherCommand,
+            'time':self.TimeCommand,"music":self.MusicCommand
+        }
         self.RecognitionModel = Model('model')
         self.Recognition = KaldiRecognizer(self.RecognitionModel,16000)
         self.RecognitionAudio = pyaudio.PyAudio()
@@ -69,7 +72,7 @@ class ArtyomAssistant:
                 if answer['text']:
                     yield answer['text']
     
-    def MainCommunicationCommand(self):
+    def CommunicationCommand(self):
         self.Tell(random.choice(ANSWERS['communication']))
     
     def WeatherCommand(self,WithInternet:bool=False):
@@ -88,22 +91,34 @@ class ArtyomAssistant:
         self.Tell(f'Сейчас {hours} {minutes}')
 
     def MusicCommand(self,command):
-        if command == 'play':
-            if MusicManager.PausedMusic == True and MusicManager.PlayingMusic == False:
-                MusicManager.PlayMusic()
-            elif MusicManager.PausedMusic == False and MusicManager.PlayingMusic == True:
+        if command == 'music':
+            if MusicManager.PausedMusic == False and MusicManager.PlayingMusic == False and MusicManager.StoppedMusic == True:
+                MusicThread = threading.Thread(target = MusicManager.PlayMusic)
+                MusicThread.start()
+            elif MusicManager.PausedMusic == False and MusicManager.PlayingMusic == False and MusicManager.StoppedMusic == False:
+                MusicThread = threading.Thread(target = MusicManager.PlayMusic)
+                MusicThread.start()
+            elif MusicManager.PausedMusic == False and MusicManager.PlayingMusic == True and MusicManager.StoppedMusic == False:
                 self.Tell(random.choice(ANSWERS['play-music']))
-        elif command == 'stop':
-            if MusicManager.PausedMusic == False and MusicManager.PlayingMusic == True:
+            elif MusicManager.PausedMusic == True and MusicManager.PlayingMusic == False and MusicManager.StoppedMusic == False:
+                MusicManager.UnpauseMusic()
+
+        elif command == 'off-music':
+            if MusicManager.PlayingMusic == True and MusicManager.StoppedMusic == False:
                 MusicManager.StopMusic()
-            elif MusicManager.PausedMusic == True and MusicManager.PlayingMusic == False:
-                self.Tell(random.choice(ANSWERS['stop-music']))
-        elif command == 'pause':
-            if MusicManager.PausedMusic == False and MusicManager.PlayingMusic == True:
+            elif MusicManager.PlayingMusic == False and MusicManager.StoppedMusic == True:
+                self.Tell(random.choice(ANSWERS['off-music']))
+
+        elif command == 'pause-music':
+            if MusicManager.PausedMusic == False and MusicManager.PlayingMusic == True and MusicManager.StoppedMusic == False:
                 MusicManager.PauseMusic()
-            elif MusicManager.PausedMusic == True and MusicManager.PlayingMusic == False:
+            elif MusicManager.PausedMusic == True and MusicManager.PlayingMusic == False  and MusicManager.StoppedMusic == False:
                 self.Tell(random.choice(ANSWERS['pause-music']))
-        elif command == 'unpause':
+            elif MusicManager.PausedMusic == False and MusicManager.PlayingMusic == False  and MusicManager.StoppedMusic == True:
+                self.Tell('Музыка выключена.')
+                # self.Tell('Включить её?')
+
+        elif command == 'unpause-music':
             if MusicManager.PausedMusic == True and MusicManager.PlayingMusic == False:
                 MusicManager.UnpauseMusic()
             elif MusicManager.PausedMusic == False and MusicManager.PlayingMusic == True:
@@ -111,11 +126,20 @@ class ArtyomAssistant:
                 
     def CommandManager(self,PredictedValue):
         operation = CATEGORIES[PredictedValue]
-        self.Functions[operation]()
+        if operation == 'music' or operation == 'off-music' or operation == 'pause-music' or operation == 'unpause-music':
+            self.Functions[operation](operation)
+        else:
+            self.Functions[operation]()
+
+
+
 
     def Start(self):
+        i = 0
         for text in self.SpeechRecognition():
             print(text)
+            i += 1
+            print(i)
             for name in NAMES:
                 if name.lower() in text and len(text.split()) > 1:
                     print('hello')
@@ -125,7 +149,7 @@ class ArtyomAssistant:
                     # network = NeuralNetwork(len(Input))
                     # network.open()
                     # PredictedValue = network.predict(Input)
-                    self.CommandManager(10)
+                    self.CommandManager(4)
                     break
                 elif name.lower() in text and len(text.split()) == 1:
                     self.Tell('Чем могу помочь?')
