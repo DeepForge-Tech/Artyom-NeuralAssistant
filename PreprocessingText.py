@@ -1,14 +1,11 @@
 import numpy as np
 import re
-import nltk
 import string
 from sklearn.feature_extraction.text import TfidfVectorizer
 import random
 import os
 import json
 from gensim.parsing.preprocessing import remove_stopwords
-
-nltk.download('stopwords')
 
 test = {
     "Привет Артём, как дела, что делаешь?":0,
