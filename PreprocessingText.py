@@ -1,8 +1,6 @@
 import numpy as np
 import re
 import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 import string
 from sklearn.feature_extraction.text import TfidfVectorizer
 import random
