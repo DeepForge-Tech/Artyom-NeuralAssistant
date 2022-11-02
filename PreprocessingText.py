@@ -43,11 +43,9 @@ class PreprocessingDataset:
             for Input, Target in self.Dictionary:
                 Input = Input.lower()
                 Input = remove_stopwords(Input)
-                print(Input)
                 Input = re.sub(r'\d+', '', Input)
                 translator = str.maketrans('', '', string.punctuation)
                 Input = Input.translate(translator)
-                print(Input)
                 suggestions.append(Input)
                 if self.Mode == 'train':
                     self.TrainTarget.append(int(Target))
