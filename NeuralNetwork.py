@@ -6,7 +6,7 @@ from rich.progress import track
 import mplcyberpunk
 
 plt.style.use("cyberpunk")
-EPOCHS = 100000
+EPOCHS = 50000
 learning_rate = 0.0002
 ProjectDir = os.getcwd()
 Preprocessing = PreprocessingDataset()
