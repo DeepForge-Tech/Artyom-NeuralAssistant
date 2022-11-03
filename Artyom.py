@@ -39,7 +39,8 @@ class ArtyomAssistant:
     def __init__(self):
         self.Functions = {
             'communication':self.CommunicationCommand,'weather':self.WeatherCommand,
-            'time':self.TimeCommand,"music":self.MusicCommand
+            'time':self.TimeCommand,"music":self.MusicCommand,
+            'youtube':self.YoutubeCommand,'webbrowser':self.WebbrowserCommand
         }
         self.RecognitionModel = Model('model')
         self.Recognition = KaldiRecognizer(self.RecognitionModel,16000)
@@ -123,7 +124,15 @@ class ArtyomAssistant:
                 MusicManager.UnpauseMusic()
             elif MusicManager.PausedMusic == False and MusicManager.PlayingMusic == True:
                 self.Tell(random.choice(ANSWERS['unpause-music']))
-                
+
+    def YoutubeCommand(self):
+        self.Tell(random.choice(ANSWERS['youtube']))
+        webbrowser.open_new_tab('https://youtube.com')
+    
+    def WebbrowserCommand(self):
+        self.Tell(random.choice(ANSWERS['webbrowser']))
+        webbrowser.open_new_tab('https://google.com')
+
     def CommandManager(self,PredictedValue):
         operation = CATEGORIES[PredictedValue]
         if operation == 'music' or operation == 'off-music' or operation == 'pause-music' or operation == 'unpause-music':
@@ -135,21 +144,19 @@ class ArtyomAssistant:
 
 
     def Start(self):
-        i = 0
         for text in self.SpeechRecognition():
             print(text)
-            i += 1
-            print(i)
             for name in NAMES:
                 if name.lower() in text and len(text.split()) > 1:
                     print('hello')
+                    Input = text.replace(name.lower(),"")
                     # Input = [text]
                     # Input = Preprocessing.Start(PredictArray=Input,mode = 'predict')
                     # Input = Preprocessing.ToMatrix(Input)
                     # network = NeuralNetwork(len(Input))
                     # network.open()
                     # PredictedValue = network.predict(Input)
-                    self.CommandManager(4)
+                    self.CommandManager(3)
                     break
                 elif name.lower() in text and len(text.split()) == 1:
                     self.Tell('Чем могу помочь?')
