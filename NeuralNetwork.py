@@ -6,8 +6,8 @@ from rich.progress import track
 import mplcyberpunk
 
 plt.style.use("cyberpunk")
-EPOCHS = 50000
-learning_rate = 0.0002
+EPOCHS = 100000
+learning_rate = 0.1
 ProjectDir = os.getcwd()
 Preprocessing = PreprocessingDataset()
 CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music','pause-music','unpause-music','shutdown','reboot','hibernation']
@@ -18,8 +18,8 @@ class NeuralNetwork:
         self.INPUT_LAYERS = self.LENGHT_DATA
         self.HIDDEN_LAYERS = self.LENGHT_DATA
         self.OUTPUT_LAYERS = len(CATEGORIES)
-        self.w1 = (np.random.rand(self.INPUT_LAYERS, self.HIDDEN_LAYERS) - 0.5) * 2 * np.sqrt(1/self.INPUT_LAYERS)#np.random.normal(0.0, pow(self.INPUT_LAYERS, -0.5), (self.HIDDEN_LAYERS, self.INPUT_LAYERS))
-        self.w2 = (np.random.rand(self.HIDDEN_LAYERS, self.OUTPUT_LAYERS) - 0.5) * 2 * np.sqrt(1/self.HIDDEN_LAYERS)#np.random.normal(0.0, pow(self.HIDDEN_LAYERS, -0.5), (self.OUTPUT_LAYERS, self.HIDDEN_LAYERS))
+        self.w1 = np.random.randn(self.INPUT_LAYERS,self.HIDDEN_LAYERS) / 1000#(np.random.rand(self.INPUT_LAYERS, self.HIDDEN_LAYERS) - 0.5) * 2 * np.sqrt(1/self.INPUT_LAYERS)#np.random.normal(0.0, pow(self.INPUT_LAYERS, -0.5), (self.HIDDEN_LAYERS, self.INPUT_LAYERS))
+        self.w2 = np.random.randn(self.HIDDEN_LAYERS,self.OUTPUT_LAYERS) / 1000#(np.random.rand(self.HIDDEN_LAYERS, self.OUTPUT_LAYERS) - 0.5) * 2 * np.sqrt(1/self.HIDDEN_LAYERS)#np.random.normal(0.0, pow(self.HIDDEN_LAYERS, -0.5), (self.OUTPUT_LAYERS, self.HIDDEN_LAYERS))
         self.b1 = (np.random.rand(1, self.HIDDEN_LAYERS) - 0.5) * 2 * np.sqrt(1/self.INPUT_LAYERS)#np.zeros((self.HIDDEN_LAYERS, 1))
         self.b2 = (np.random.rand(1, self.OUTPUT_LAYERS) - 0.5) * 2 * np.sqrt(1/self.HIDDEN_LAYERS)#np.zeros((self.OUTPUT_LAYERS, 1))
         self.LossArray = []
@@ -81,7 +81,7 @@ class NeuralNetwork:
             for Input,Target in zip(TrainInput,TrainTarget):
                 OutputValue = self.FeedForwardPropagation(Input)
                 self.BackwardPropagation(Input,Target)
-                self.Error = self.CrossEntropy(self.Output,Target)
+                self.Error = self.MSE(self.Output,Target)
                 if float(self.Error) <= self.LocalLoss and np.argmax(self.Output) == Target:
                     self.LocalLoss = self.Error
                     # print('Best model')

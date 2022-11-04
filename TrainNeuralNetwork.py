@@ -2,7 +2,6 @@ from NeuralNetwork import NeuralNetwork
 import os
 import json
 from PreprocessingText import PreprocessingDataset
-from sklearn import linear_model
 # Initialization parametrs
 # Read data and setup maps for integer encoding and decoding.
 ProjectDir = os.getcwd()
