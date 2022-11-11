@@ -8,7 +8,7 @@ import json
 from sklearn.feature_extraction.text import CountVectorizer
 from tqdm import tqdm,trange
 from time import sleep
-from PreprocessingText import PreProcessingDataset
+from PreprocessingText import PreprocessingDataset
 # np.random.seed(42)
 
 BATCH_SIZE = 50
@@ -23,15 +23,18 @@ train_data = {}
 test_data = {}
 
 
-# Read data and setup maps for integer encoding and decoding.
 ProjectDir = os.getcwd()
 file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
 DataFile = json.load(file)
 train_data = DataFile['train_dataset']
 test_data = DataFile['test_dataset']
-Preprocessing = PreProcessingDataset()
-TrainInput,TrainTarget = Preprocessing.Start(train_data,'train')
-TestInput,TestTarget = Preprocessing.Start(test_data,'test')
+Preprocessing = PreprocessingDataset()
+TrainInput,TrainTarget = Preprocessing.Start(Dictionary = train_data,mode = 'train')
+TestInput,TestTarget = Preprocessing.Start(Dictionary = test_data,mode = 'test')
+TrainInput = Preprocessing.ToMatrix(TrainInput)
+TrainTarget = Preprocessing.ToNumpyArray(TrainTarget)
+TestInput = Preprocessing.ToMatrix(TestInput)
+TestTarget = Preprocessing.ToNumpyArray(TestTarget)
 
 
 def sigmoid(x):

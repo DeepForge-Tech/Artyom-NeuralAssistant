@@ -417,9 +417,294 @@
 #     for char in text[i * n: (i + 1) * n]:
 #         data[-1].append(char)
 # 
+# import numpy as np
+# import matplotlib.pyplot as plt
+# import os
+# from PreprocessingText import PreprocessingDataset
+# from rich.progress import track
+# import mplcyberpunk
+
+# plt.style.use("cyberpunk")
+# EPOCHS = 50000
+# learning_rate = 0.0002
+# ProjectDir = os.getcwd()
+# Preprocessing = PreprocessingDataset()
+# CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music','pause-music','unpause-music','shutdown','reboot','hibernation']
+
+# class NeuralNetwork:
+#     def __init__(self,LENGHT_DATA):
+#         self.LENGHT_DATA = LENGHT_DATA
+#         self.INPUT_LAYERS = self.LENGHT_DATA
+#         self.HIDDEN_LAYERS = self.LENGHT_DATA
+#         self.OUTPUT_LAYERS = len(CATEGORIES)
+#         self.w1 = np.random.randn(self.INPUT_LAYERS,self.HIDDEN_LAYERS) / 1000#(np.random.rand(self.INPUT_LAYERS, self.HIDDEN_LAYERS) - 0.5) * 2 * np.sqrt(1/self.INPUT_LAYERS)#np.random.normal(0.0, pow(self.INPUT_LAYERS, -0.5), (self.HIDDEN_LAYERS, self.INPUT_LAYERS))
+#         self.w2 = np.random.randn(self.HIDDEN_LAYERS,self.OUTPUT_LAYERS) / 1000#(np.random.rand(self.HIDDEN_LAYERS, self.OUTPUT_LAYERS) - 0.5) * 2 * np.sqrt(1/self.HIDDEN_LAYERS)#np.random.normal(0.0, pow(self.HIDDEN_LAYERS, -0.5), (self.OUTPUT_LAYERS, self.HIDDEN_LAYERS))
+#         self.b1 = (np.random.rand(1, self.HIDDEN_LAYERS) - 0.5) * 2 * np.sqrt(1/self.INPUT_LAYERS)#np.zeros((self.HIDDEN_LAYERS, 1))
+#         self.b2 = (np.random.rand(1, self.OUTPUT_LAYERS) - 0.5) * 2 * np.sqrt(1/self.HIDDEN_LAYERS)#np.zeros((self.OUTPUT_LAYERS, 1))
+#         self.LossArray = []
+#         self.Loss = 0
+#         self.LocalLoss = 0.5
+
+#     def sigmoid(self,x):
+#         return 1 / (1 + np.exp(-x))
+    
+#     def deriv_sigmoid(self,y):
+#         return y * (1 - y)
+    
+#     def relu(self,x):
+#         return x * (x > 0)
+
+#     def deriv_relu(self,x):
+#         return (x >= 0).astype(float)
+
+#     def Loss(self,y,output):
+#         return 1/2 * (y - output) ** 2
+    
+#     def Loss_deriv(self,y,output):
+#         return y - output
+
+#     def MSE(self,PredictedValue,TargetValue):
+#         Loss = ((TargetValue - PredictedValue) ** 2).mean()
+#         return Loss
+    
+#     def CrossEntropy(self,PredictedValue,Target):
+#         return -np.log(PredictedValue[0, Target])
+
+#     def softmax(self,xs):
+#         # Applies the Softmax Function to the input array.
+#         return np.exp(xs) / sum(np.exp(xs))
+
+#     def FeedForwardPropagation(self,Input):
+#         self.InputLayer = self.sigmoid(np.dot(Input,self.w1) + self.b1)
+#         self.OutputLayer = self.sigmoid(np.dot(self.InputLayer,self.w2) + self.b2)
+#         self.Output = self.OutputLayer
+#         return self.Output
+
+#     def BackwardPropagation(self,Input,Target):
+#         d1_w2 = learning_rate *\
+#                 self.Loss_deriv(Target,self.Output) * \
+#                 self.deriv_sigmoid(self.Output)
+#         d2_w2 = d1_w2 * self.InputLayer.reshape(-1,1)
+#         d1_w1 = learning_rate * \
+#                 self.Loss_deriv(Target,self.Output) * \
+#                 self.deriv_sigmoid(self.Output) @ \
+#                 self.w2.T * \
+#                 self.deriv_sigmoid(self.InputLayer)
+#         d2_w1 = np.matrix(d1_w1).T @ np.matrix(Input)
+#         self.w1 += d2_w1
+#         self.w2 += d2_w2
+    
+#     def train(self,TrainInput,TrainTarget):
+#         for epoch in  track(range(EPOCHS), description='[green]Training model'):
+#             self.Error = 0
+#             for Input,Target in zip(TrainInput,TrainTarget):
+#                 OutputValue = self.FeedForwardPropagation(Input)
+#                 self.BackwardPropagation(Input,Target)
+#                 self.Error = self.MSE(self.Output,Target)
+#                 if float(self.Error) <= self.LocalLoss and np.argmax(self.Output) == Target:
+#                     self.LocalLoss = self.Error
+#                     # print('Best model')
+#                     self.save()
+#             self.LossArray.append(self.Error)
+#         # График ошибок
+#         plt.title('Train Loss')
+#         plt.plot(self.LossArray)
+#         plt.savefig(os.path.join(ProjectDir,'Graphics','Loss.png'))
+#         # plt.show()
+    
+#     def predict(self,Input):
+#         OutputValue = self.FeedForwardPropagation(Input)
+#         PredictedValue = np.argmax(OutputValue)
+#         print(PredictedValue)
+#         return PredictedValue
+
+#     def save(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant.npz')):
+#         np.savez_compressed(PathParametrs, self.w1,self.w2,self.b1,self.b2)
+
+#     def open(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant.npz')):
+#         ParametrsFile = np.load(PathParametrs)
+#         for n in range(int(self.HIDDEN_LAYERS)):
+#             for i in range(self.HIDDEN_LAYERS):
+#                 if (0 <= n) and (n < len(self.w1)):
+#                     if (0 <= i) and (i < len(self.w1[n])):
+#                         self.w1[n][i] = ParametrsFile['arr_0'][n][i]
+#                 if (0 <= n) and (n < len(self.w2)):
+#                     if (0 <= i) and (i < len(self.w2[n])):
+#                         self.w2[n][i] = ParametrsFile['arr_1'][n][i]
+#                 if (0 <= n) and (n < len(self.b1)):
+#                     if (0 <= i) and (i < len(self.b1[n])):
+#                         self.b1[n][i] = ParametrsFile['arr_2'][n][i]
+#                 if (0 <= n) and (n < len(self.b2)):
+#                     if (0 <= i) and (i < len(self.b2[n])):
+#                         self.b2[n][i] = ParametrsFile['arr_3'][n][i]
+#         print('W1')
+#         print(self.w1)
+#         print('Parametrs W1')
+#         print(ParametrsFile['arr_0'])
+    
+    
+
+# def TestPredict():
+#     while True:
+#         command = input('>>>')
+#         if command == 'exit':
+#             break
+#         else:
+#             Test = [command]
+#             Test = Preprocessing.Start(PredictArray=Test,mode = 'predict')
+#             Test = Preprocessing.ToMatrix(Test)
+#             network = NeuralNetwork(len(Test))
+#             network.open()
+#             network.predict(Test)
+
+# if __name__ == '__main__':
+#     TestPredict()
 import random
-d = {'a':1, 'b':2, 'c':3, 'd':4}
-l = list(d.items())
-random.shuffle(l)
-d = dict(l)
-print(d)
+import numpy as np
+import os
+import json
+from PreprocessingText import PreprocessingDataset
+from rich.progress import track
+
+CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music','pause-music','unpause-music','shutdown','reboot','hibernation']
+ProjectDir = os.getcwd()
+file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
+DataFile = json.load(file)
+train_data = DataFile['train_dataset']
+test_data = DataFile['test_dataset']
+Preprocessing = PreprocessingDataset()
+TrainInput,TrainTarget = Preprocessing.Start(Dictionary = train_data,mode = 'train')
+TestInput,TestTarget = Preprocessing.Start(Dictionary = test_data,mode = 'test')
+TrainInput = Preprocessing.ToMatrix(TrainInput)
+TrainTarget = Preprocessing.ToNumpyArray(TrainTarget)
+TestInput = Preprocessing.ToMatrix(TestInput)
+TestTarget = Preprocessing.ToNumpyArray(TestTarget)
+INPUT_DIM = 57
+OUT_DIM = 28
+H_DIM = 512
+
+def relu(t):
+    return np.maximum(t, 0)
+
+def softmax(t):
+    out = np.exp(t)
+    return out / np.sum(out)
+
+def softmax_batch(t):
+    out = np.exp(t)
+    return out / np.sum(out, axis=1, keepdims=True)
+
+def sparse_cross_entropy(z, y):
+    return -np.log(z[0, y])
+
+def sparse_cross_entropy_batch(z, y):
+    return -np.log(np.array([z[j, y[j]] for j in range(len(y))]))
+
+def to_full(y, num_classes):
+    y_full = np.zeros((1, num_classes))
+    y_full[0, y] = 1
+    return y_full
+
+def to_full_batch(y, num_classes):
+    y_full = np.zeros((len(y), num_classes))
+    for j, yj in enumerate(y):
+        y_full[j, yj] = 1
+    return y_full
+
+def relu_deriv(t):
+    return (t >= 0).astype(float)
+
+W1 = np.random.rand(INPUT_DIM, H_DIM)
+b1 = np.random.rand(1, H_DIM)
+W2 = np.random.rand(H_DIM, OUT_DIM)
+b2 = np.random.rand(1, OUT_DIM)
+
+W1 = (W1 - 0.5) * 2 * np.sqrt(1/INPUT_DIM)
+b1 = (b1 - 0.5) * 2 * np.sqrt(1/INPUT_DIM)
+W2 = (W2 - 0.5) * 2 * np.sqrt(1/H_DIM)
+b2 = (b2 - 0.5) * 2 * np.sqrt(1/H_DIM)
+
+ALPHA = 0.0002
+NUM_EPOCHS = 50000
+BATCH_SIZE = 50
+
+loss_arr = []
+
+for ep in track(range(NUM_EPOCHS), description='[green]Training model'):
+    # random.shuffle(dataset)
+    # for i in range(len(dataset) // BATCH_SIZE):
+    for Input,Target in zip(TrainInput,TrainTarget):
+        # batch_x, batch_y = zip(*dataset[i*BATCH_SIZE : i*BATCH_SIZE+BATCH_SIZE])
+        x = Input#np.concatenate(batch_x, axis=0)
+        y = Target#np.array(batch_y)
+        
+        # Forward
+        t1 = x @ W1 + b1
+        h1 = relu(t1)
+        t2 = h1 @ W2 + b2
+        z = softmax(t2)
+        E = np.sum(sparse_cross_entropy(z, y))
+
+        # Backward
+        y_full = to_full(y, OUT_DIM)
+        dE_dt2 = z - y
+        print(len(dE_dt2[0]))
+        dE_dW2 = h1.T @ dE_dt2
+        dE_db2 = np.sum(dE_dt2, axis=0, keepdims=True)
+        dE_dh1 = dE_dt2 @ W2.T
+        dE_dt1 = dE_dh1 * relu_deriv(t1)
+        dE_dW1 = x.T @ dE_dt1
+        dE_db1 = np.sum(dE_dt1, axis=0, keepdims=True)
+
+        # Update
+        W1 = W1 - ALPHA * dE_dW1
+        b1 = b1 - ALPHA * dE_db1
+        W2 = W2 - ALPHA * dE_dW2
+        b2 = b2 - ALPHA * dE_db2
+        if E <=0.1:
+            print(E)
+            print(np.argmax(t2))
+        loss_arr.append(E)
+
+def predict(x):
+    t1 = x @ W1 + b1
+    h1 = relu(t1)
+    t2 = h1 @ W2 + b2
+    z = softmax(t2)
+    return z
+
+# def calc_accuracy():
+#     correct = 0
+#     for x, y in dataset:
+#         z = predict(x)
+#         y_pred = np.argmax(z)
+#         if y_pred == y:
+#             correct += 1
+#     acc = correct / len(dataset)
+#     return acc
+
+# accuracy = calc_accuracy()
+# print("Accuracy:", accuracy)
+
+import matplotlib.pyplot as plt
+plt.plot(loss_arr)
+plt.show()
+while True:
+    command = input('>>>')
+    if command == 'exit':
+        break
+    else:
+        Test = [command]
+        Test = Preprocessing.Start(PredictArray=Test,mode = 'predict')
+        Test = Preprocessing.ToMatrix(Test)
+        INPUT_DIM = len(Test)
+        W1 = np.random.rand(INPUT_DIM, H_DIM)
+        b1 = np.random.rand(1, H_DIM)
+        W2 = np.random.rand(H_DIM, OUT_DIM)
+        b2 = np.random.rand(1, OUT_DIM)
+
+        W1 = (W1 - 0.5) * 2 * np.sqrt(1/INPUT_DIM)
+        b1 = (b1 - 0.5) * 2 * np.sqrt(1/INPUT_DIM)
+        W2 = (W2 - 0.5) * 2 * np.sqrt(1/H_DIM)
+        b2 = (b2 - 0.5) * 2 * np.sqrt(1/H_DIM)
+        print(np.argmax(predict(Test)))
