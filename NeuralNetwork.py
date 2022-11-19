@@ -28,15 +28,15 @@ file.close()
 
 
 learning_rate = 0.001
-EPOCHS = 100000
+EPOCHS = 500000
 BATCH_SIZE = 50
 
 class NeuralNetwork:
     # Функция инициализации переменных
     def __init__(self,CATEGORIES:dict = {},CATEGORIES_TARGET:list = []):
-        self.INPUT_DIM = 60
+        self.INPUT_DIM = 64
         self.HIDDEN_DIM = 512
-        self.OUTPUT_DIM = 28
+        self.OUTPUT_DIM = len(CATEGORIES_TARGET)
         self.GenerateWeights()
         self.LossArray = []
         self.Loss = 0
@@ -148,7 +148,7 @@ class NeuralNetwork:
             Output = np.argmax(PredictedValue)
             if Output == Target:
                 correct += 1
-        accuracy = correct / len(TrainInput[0])
+        accuracy = correct / len(TrainInput)
         print(accuracy)
     
     # Сохранение весов и смещений нейросети
@@ -170,4 +170,4 @@ if __name__ == '__main__':
     network.train(TrainInput,TrainTarget)
     # network.load()
     # Функция для вызова нейросети
-    network.predict(Preprocessing.Start(PredictArray = ['музон включи'],mode = 'predict'))
+    network.predict(Preprocessing.Start(PredictArray = ['скажи время'],mode = 'predict'))

@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import os
 import json
+import random
 
 # Подготовка датасета
 ProjectDir = os.getcwd()
@@ -40,7 +41,9 @@ class PreprocessingDataset:
     def Start(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
         self.Mode = mode
         if self.Mode == 'train' or self.Mode == 'test':
-            self.Dictionary = Dictionary
+            self.Dictionary = list(Dictionary.items())
+            random.shuffle(self.Dictionary)
+            self.Dictionary = dict(self.Dictionary)
             for intent in self.Dictionary:
                 for questions in Dictionary[intent]['questions']:
                     self.x.append(questions)
