@@ -1,142 +1,173 @@
+# Импортирование библиотек для обучения и проверки нейросети
 import numpy as np
-import matplotlib.pyplot as plt
+import numpy as np
 import os
+import json
 from PreprocessingText import PreprocessingDataset
+import matplotlib.pyplot as plt
 from rich.progress import track
 import mplcyberpunk
 
 plt.style.use("cyberpunk")
-EPOCHS = 50000
-learning_rate = 0.0002
+np.random.seed(0)
+
+# Подготовка датасета
 ProjectDir = os.getcwd()
+file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
 Preprocessing = PreprocessingDataset()
-CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music','pause-music','unpause-music','shutdown','reboot','hibernation']
+DataFile = json.load(file)
+dataset = DataFile['dataset']
+TrainInput,TrainTarget = Preprocessing.Start(Dictionary = dataset,mode = 'train')
+file.close()
+
+file = open('Settings.json','r',encoding='utf-8')
+DataFile = json.load(file)
+CATEGORIES = DataFile['CATEGORIES']
+CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
+file.close()
+
+
+learning_rate = 0.001
+EPOCHS = 100000
+BATCH_SIZE = 50
 
 class NeuralNetwork:
-    def __init__(self,LENGHT_DATA):
-        self.LENGHT_DATA = LENGHT_DATA
-        self.INPUT_LAYERS = self.LENGHT_DATA
-        self.HIDDEN_LAYERS = self.LENGHT_DATA
-        self.OUTPUT_LAYERS = len(CATEGORIES)
-        self.w1 = np.random.randn(self.INPUT_LAYERS,self.HIDDEN_LAYERS) / 1000#(np.random.rand(self.INPUT_LAYERS, self.HIDDEN_LAYERS) - 0.5) * 2 * np.sqrt(1/self.INPUT_LAYERS)#np.random.normal(0.0, pow(self.INPUT_LAYERS, -0.5), (self.HIDDEN_LAYERS, self.INPUT_LAYERS))
-        self.w2 = np.random.randn(self.HIDDEN_LAYERS,self.OUTPUT_LAYERS) / 1000#(np.random.rand(self.HIDDEN_LAYERS, self.OUTPUT_LAYERS) - 0.5) * 2 * np.sqrt(1/self.HIDDEN_LAYERS)#np.random.normal(0.0, pow(self.HIDDEN_LAYERS, -0.5), (self.OUTPUT_LAYERS, self.HIDDEN_LAYERS))
-        self.b1 = (np.random.rand(1, self.HIDDEN_LAYERS) - 0.5) * 2 * np.sqrt(1/self.INPUT_LAYERS)#np.zeros((self.HIDDEN_LAYERS, 1))
-        self.b2 = (np.random.rand(1, self.OUTPUT_LAYERS) - 0.5) * 2 * np.sqrt(1/self.HIDDEN_LAYERS)#np.zeros((self.OUTPUT_LAYERS, 1))
+    # Функция инициализации переменных
+    def __init__(self,CATEGORIES:dict = {},CATEGORIES_TARGET:list = []):
+        self.INPUT_DIM = 60
+        self.HIDDEN_DIM = 512
+        self.OUTPUT_DIM = 28
+        self.GenerateWeights()
         self.LossArray = []
         self.Loss = 0
         self.LocalLoss = 0.5
 
+    # Функция для генерации весов нейросети
+    def GenerateWeights(self):
+        self.w1 = np.random.rand(self.INPUT_DIM, self.HIDDEN_DIM)
+        self.b1 = np.random.rand(1, self.HIDDEN_DIM)
+        self.w2 = np.random.rand(self.HIDDEN_DIM, self.OUTPUT_DIM)
+        self.b2 = np.random.rand(1, self.OUTPUT_DIM)
+        self.w1 = (self.w1 - 0.5) * 2 * np.sqrt(1/self.INPUT_DIM)
+        self.b1 = (self.b1 - 0.5) * 2 * np.sqrt(1/self.INPUT_DIM)
+        self.w2 = (self.w2 - 0.5) * 2 * np.sqrt(1/self.HIDDEN_DIM)
+        self.b2 = (self.b2 - 0.5) * 2 * np.sqrt(1/self.HIDDEN_DIM)
+
+    # Функция активации
+    def relu(self,t):
+        return np.maximum(t, 0)
+
+    def softmax(self,t):
+        out = np.exp(t)
+        return out / np.sum(out, axis=1, keepdims=True)
+
+    # Функция для расчёта ошибки
+    def CrossEntropy(self,z, y):
+        return -np.log(np.array([z[j, y[j]] for j in range(len(y))]))
+
+    def to_full(self,y, num_classes):
+        y_full = np.zeros((len(y), num_classes))
+        for j, yj in enumerate(y):
+            y_full[j, yj] = 1
+        return y_full
+
+    # Производная функции активации
+    def deriv_relu(self,t):
+        return (t >= 0).astype(float)
+
+    # Функция активации
     def sigmoid(self,x):
         return 1 / (1 + np.exp(-x))
     
+    # Производная функции активации
     def deriv_sigmoid(self,y):
         return y * (1 - y)
-    
-    def relu(self,x):
-        return x * (x > 0)
 
-    def deriv_relu(self,x):
-        return (x >= 0).astype(float)
+    # Функция прямого распространени нейросети
+    def FeedForward(self,Input):
+        self.h1 = Input @ self.w1 + self.b1
+        self.HiddenLayer = self.sigmoid(self.h1)
+        self.o = self.HiddenLayer @ self.w2 + self.b2
+        self.OutputLayer = self.softmax(self.o)
+        return self.OutputLayer
 
-    def Loss(self,y,output):
-        return 1/2 * (y - output) ** 2
-    
-    def Loss_deriv(self,y,output):
-        return y - output
-
-    def MSE(self,PredictedValue,TargetValue):
-        Loss = ((TargetValue - PredictedValue) ** 2).mean()
-        return Loss
-    
-    def CrossEntropy(self,PredictedValue,Target):
-        return -np.log(PredictedValue[0, Target])
-
-    def softmax(self,xs):
-        # Applies the Softmax Function to the input array.
-        return np.exp(xs) / sum(np.exp(xs))
-
-    def FeedForwardPropagation(self,Input):
-        self.InputLayer = self.sigmoid(np.dot(Input,self.w1) + self.b1)
-        self.OutputLayer = self.sigmoid(np.dot(self.InputLayer,self.w2) + self.b2)
-        self.Output = self.OutputLayer
-        return self.Output
-
+    # Функция обратного распространения ошибки нейросети
     def BackwardPropagation(self,Input,Target):
-        d1_w2 = learning_rate *\
-                self.Loss_deriv(Target,self.Output) * \
-                self.deriv_sigmoid(self.Output)
-        d2_w2 = d1_w2 * self.InputLayer.reshape(-1,1)
-        d1_w1 = learning_rate * \
-                self.Loss_deriv(Target,self.Output) * \
-                self.deriv_sigmoid(self.Output) @ \
-                self.w2.T * \
-                self.deriv_sigmoid(self.InputLayer)
-        d2_w1 = np.matrix(d1_w1).T @ np.matrix(Input)
-        self.w1 += d2_w1
-        self.w2 += d2_w2
-    
-    def train(self,TrainInput,TrainTarget):
-        for epoch in  track(range(EPOCHS), description='[green]Training model'):
-            self.Error = 0
-            for Input,Target in zip(TrainInput,TrainTarget):
-                OutputValue = self.FeedForwardPropagation(Input)
-                self.BackwardPropagation(Input,Target)
-                self.Error = self.MSE(self.Output,Target)
-                if float(self.Error) <= self.LocalLoss and np.argmax(self.Output) == Target:
-                    self.LocalLoss = self.Error
-                    # print('Best model')
-                    self.save()
-            self.LossArray.append(self.Error)
-        # График ошибок
-        plt.title('Train Loss')
-        plt.plot(self.LossArray)
-        plt.savefig(os.path.join(ProjectDir,'Graphics','Loss.png'))
-        # plt.show()
-    
-    def predict(self,Input):
-        OutputValue = self.FeedForwardPropagation(Input)
-        PredictedValue = np.argmax(OutputValue)
-        print(PredictedValue)
-        return PredictedValue
+        y_full = self.to_full(Target, self.OUTPUT_DIM)
+        d_o = self.OutputLayer - y_full
+        d_w2 = self.HiddenLayer.T @ d_o
+        d_b2 = np.sum(d_o, axis=0, keepdims=True)
+        d_hl = d_o @ self.w2.T
+        d_h1 = d_hl * self.deriv_sigmoid(self.h1)
+        d_w1 = Input.T @ d_h1
+        d_b1 = np.sum(d_h1, axis=0, keepdims=True)
 
+        # Обновление весов и смещений нейросети
+        self.w1 = self.w1 - learning_rate * d_w1
+        self.b1 = self.b1 - learning_rate * d_b1
+        self.w2 = self.w2 - learning_rate * d_w2
+        self.b2 = self.b2 - learning_rate * d_b2
+
+    def train(self,TrainInput,TrainTarget):
+        # Генераци весов нейросети по длине входного массива(датасета)
+        self.INPUT_DIM = len(TrainInput[0])
+        self.GenerateWeights()
+        # Прохождение по датасету циклом for
+        for epoch in track(range(EPOCHS), description='[green]Training model'):
+            # Вызов функции для расчёта прямого распространения нейросети
+            PredictedValue = self.FeedForward(TrainInput)
+            # Вызов функции для расчёта обратного распространения ошибки нейросети
+            self.BackwardPropagation(TrainInput,TrainTarget)
+            # Расчёт ошибки
+            self.Loss = np.sum(self.CrossEntropy(self.OutputLayer, TrainTarget))
+            # Сохранение модели с наименьшей ошибкой
+            if self.Loss <= self.LocalLoss:
+                self.LocalLoss = self.Loss
+                self.save()
+            # Добавление ошибки в массив для дальнейшего вывода графика ошибки нейросети
+            self.LossArray.append(self.Loss)
+        # Вывод графика ошибки нейросети
+        plt.plot(self.LossArray)
+        plt.show() 
+        # Сохранение картинки с графиком
+        plt.savefig(os.path.join(ProjectDir,'Graphics','Loss.png'))
+        # Вызов функции проверки нейросети с последующим выводом количества правильных ответов в виде процентов
+        self.score()
+
+    # Функция для вызова нейросети
+    def predict(self,Input):
+        PredictedValue = np.argmax(self.FeedForward(Input))
+        print(CATEGORIES_TARGET[str(PredictedValue)])
+        return CATEGORIES_TARGET[str(PredictedValue)]
+    
+    # Функция проверки нейросети с последующим выводом количества правильных ответов в виде процентов
+    def score(self):
+        correct = 0
+        for Input,Target in zip(TrainInput,TrainTarget):
+            PredictedValue = self.FeedForward(Input)
+            Output = np.argmax(PredictedValue)
+            if Output == Target:
+                correct += 1
+        accuracy = correct / len(TrainInput[0])
+        print(accuracy)
+    
+    # Сохранение весов и смещений нейросети
     def save(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant.npz')):
         np.savez_compressed(PathParametrs, self.w1,self.w2,self.b1,self.b2)
-
-    def open(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant.npz')):
+    
+    # Загрузка весов и смещений нейросети
+    def load(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant.npz')):
         ParametrsFile = np.load(PathParametrs)
-        for n in range(int(self.HIDDEN_LAYERS)):
-            for i in range(self.HIDDEN_LAYERS):
-                if (0 <= n) and (n < len(self.w1)):
-                    if (0 <= i) and (i < len(self.w1[n])):
-                        self.w1[n][i] = ParametrsFile['arr_0'][n][i]
-                if (0 <= n) and (n < len(self.w2)):
-                    if (0 <= i) and (i < len(self.w2[n])):
-                        self.w2[n][i] = ParametrsFile['arr_1'][n][i]
-                if (0 <= n) and (n < len(self.b1)):
-                    if (0 <= i) and (i < len(self.b1[n])):
-                        self.b1[n][i] = ParametrsFile['arr_2'][n][i]
-                if (0 <= n) and (n < len(self.b2)):
-                    if (0 <= i) and (i < len(self.b2[n])):
-                        self.b2[n][i] = ParametrsFile['arr_3'][n][i]
-        print('W1')
-        print(self.w1)
-        print('Parametrs W1')
-        print(ParametrsFile['arr_0'])
-    
-    
-
-def TestPredict():
-    while True:
-        command = input('>>>')
-        if command == 'exit':
-            break
-        else:
-            Test = [command]
-            Test = Preprocessing.Start(PredictArray=Test,mode = 'predict')
-            Test = Preprocessing.ToMatrix(Test)
-            network = NeuralNetwork(len(Test))
-            network.open()
-            network.predict(Test)
+        self.w1 = ParametrsFile['arr_0']
+        self.w2 = ParametrsFile['arr_1']
+        self.b1 = ParametrsFile['arr_2']
+        self.b2 = ParametrsFile['arr_3']
 
 if __name__ == '__main__':
-    TestPredict()
+    # Вызов класса нейросети
+    network = NeuralNetwork(CATEGORIES,CATEGORIES_TARGET)
+    # Вызов функции тренировки нейросети
+    network.train(TrainInput,TrainTarget)
+    # network.load()
+    # Функция для вызова нейросети
+    network.predict(Preprocessing.Start(PredictArray = ['музон включи'],mode = 'predict'))

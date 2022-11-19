@@ -4,7 +4,10 @@ import os
 import json
 from PreprocessingText import PreprocessingDataset
 from rich.progress import track
+import mplcyberpunk
+import matplotlib.pyplot as plt
 
+plt.style.use("cyberpunk")
 CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music','pause-music','unpause-music','shutdown','reboot','hibernation']
 ProjectDir = os.getcwd()
 file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
@@ -20,7 +23,7 @@ TestInput = Preprocessing.ToMatrix(TestInput)
 TestTarget = Preprocessing.ToNumpyArray(TestTarget)
 INPUT_DIM = len(TrainInput[0])
 OUT_DIM = len(CATEGORIES)
-H_DIM = 64
+H_DIM = 128
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
@@ -71,8 +74,8 @@ b1 = (b1 - 0.5) * 2 * np.sqrt(1/INPUT_DIM)
 W2 = (W2 - 0.5) * 2 * np.sqrt(1/H_DIM)
 b2 = (b2 - 0.5) * 2 * np.sqrt(1/H_DIM)
 
-ALPHA = 0.0005
-NUM_EPOCHS = 5000000
+ALPHA = 0.0002
+NUM_EPOCHS = 100000
 BATCH_SIZE = 50
 
 loss_arr = []
@@ -83,8 +86,8 @@ for ep in track(range(NUM_EPOCHS), description='[green]Training model'):
     # for i in range(len(dataset) // BATCH_SIZE):
     # for Input,Target in zip(TrainInput,TrainTarget):
         # batch_x, batch_y = zip(*dataset[i*BATCH_SIZE : i*BATCH_SIZE+BATCH_SIZE])
-        x = TrainInput#np.concatenate(batch_x, axis=0)
-        y = TrainTarget#np.array(batch_y)
+        x = TrainInput#np.concatenate(TrainInput, axis=0)
+        y = TrainTarget
         
         # Forward
         t1 = x @ W1 + b1
@@ -108,20 +111,10 @@ for ep in track(range(NUM_EPOCHS), description='[green]Training model'):
         b1 = b1 - ALPHA * dE_db1
         W2 = W2 - ALPHA * dE_dW2
         b2 = b2 - ALPHA * dE_db2
-        if E <=10:
-            print(E)
-            print(np.argmax(t2))
+        # if E <=10:
+        #     print(E)
+            # print(np.argmax(t2))
         loss_arr.append(E)
-        if ep / 1000000 == 1:
-            print(E)
-        elif ep / 1000000 == 2:
-            print(E)
-        elif ep / 1000000 == 3:
-            print(E)
-        elif ep / 1000000 == 4:
-            print(E)
-        elif ep / 1000000 == 5:
-            print(E)
 
 def predict(x):
     t1 = x @ W1 + b1
@@ -143,7 +136,7 @@ def calc_accuracy():
 accuracy = calc_accuracy()
 print("Accuracy:", accuracy)
 
-import matplotlib.pyplot as plt
+
 plt.plot(loss_arr)
 plt.savefig(os.path.join(ProjectDir,'Graphics','Loss.png'))
 plt.show()
@@ -154,8 +147,10 @@ while True:
     else:
         Test = [command]
         Test = Preprocessing.Start(PredictArray=Test,mode = 'predict')
-        Test = Preprocessing.ToMatrix(Test)
-        INPUT_DIM = len(Test)
+        Test = Preprocessing.ToNumpyArray(Test[0])
+        print(type(Test))
+        print(Test)
+        INPUT_DIM = Test.size
         W1 = np.random.rand(INPUT_DIM, H_DIM)
         b1 = np.random.rand(1, H_DIM)
         # W2 = np.random.rand(H_DIM, OUT_DIM)
@@ -165,4 +160,4 @@ while True:
         b1 = (b1 - 0.5) * 2 * np.sqrt(1/INPUT_DIM)
         # W2 = (W2 - 0.5) * 2 * np.sqrt(1/H_DIM)
         # b2 = (b2 - 0.5) * 2 * np.sqrt(1/H_DIM)
-        print(np.argmax(predict(Test)))
+        print(np.argmax(predict(Test[0])))

@@ -1,19 +1,22 @@
+# Импортирование необходмых библиотек в целях подготовки датасета для нейросети
 import numpy as np
-import re
-import string
 from sklearn.feature_extraction.text import TfidfVectorizer
-import random
 import os
 import json
-from gensim.parsing.preprocessing import remove_stopwords
 
-test = {
-    "Привет Артём, как дела, что делаешь?":0,
-    "Музыка":"4",
-    "Музыку":"4",
-    "Прочти новости":"5",
-    "Новости":"5"
-}
+# Подготовка датасета
+ProjectDir = os.getcwd()
+file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
+DataFile = json.load(file)
+dataset = DataFile['dataset']
+file.close()
+
+file = open('Settings.json','r',encoding='utf-8')
+DataFile = json.load(file)
+CATEGORIES = DataFile['CATEGORIES']
+CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
+file.close()
+
 
 class PreprocessingDataset:
     def __init__(self):
@@ -25,6 +28,8 @@ class PreprocessingDataset:
         self.PredictInput = []
         self.PredictArray = []
         self.Mode = 'train'
+        self.x = []
+        self.y = []
 
     def ToMatrix(self,array):
         return np.squeeze(array)
@@ -35,57 +40,36 @@ class PreprocessingDataset:
     def Start(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
         self.Mode = mode
         if self.Mode == 'train' or self.Mode == 'test':
-            LocalDictionary = list(Dictionary.items())
-            random.shuffle(LocalDictionary)
-            self.Dictionary = dict(LocalDictionary)
-            self.Dictionary = list(self.Dictionary.items())
-            suggestions = []
-            for Input, Target in self.Dictionary:
-                Input = Input.lower()
-                Input = remove_stopwords(Input)
-                Input = re.sub(r'\d+', '', Input)
-                translator = str.maketrans('', '', string.punctuation)
-                Input = Input.translate(translator)
-                suggestions.append(Input)
-                if self.Mode == 'train':
-                    self.TrainTarget.append(int(Target))
-                elif self.Mode == 'test':
-                    self.TestTarget.append(int(Target))
+            self.Dictionary = Dictionary
+            for intent in self.Dictionary:
+                for questions in Dictionary[intent]['questions']:
+                    self.x.append(questions)
+                    self.y.append(intent)
+            if self.Mode == 'train':
+                for target in self.y:
+                    self.TrainTarget.append(CATEGORIES[target])
+            elif self.Mode == 'test':
+                for target in self.y:
+                    self.TestTarget.append(CATEGORIES[target])
+            vectorizer = TfidfVectorizer()
+            vectorizer = vectorizer.fit_transform(self.x)
+            VectorizedData = vectorizer.toarray()
+            InputDatasetFile = open("Datasets/InputDataset.json", "w", encoding ='utf8')
+            json.dump(self.x, InputDatasetFile,ensure_ascii=False,sort_keys=True, indent=2)
+            InputDatasetFile.close()
+            if self.Mode == 'train':
+                self.TrainInput = np.squeeze(VectorizedData)
+                return self.TrainInput,self.TrainTarget
+            elif self.Mode == 'test':
+                self.TestInput = VectorizedData
+                return self.TestInput,self.TestTarget
+
         elif self.Mode == 'predict':
             self.PredictArray = PredictArray
-            suggestions = []
-            for Input in self.PredictArray:
-                Input = Input.lower()
-                Input = re.sub(r'\d+', '', Input)
-                translator = str.maketrans('', '', string.punctuation)
-                Input = Input.translate(translator)
-                suggestions.append(Input)
-        vectorizer = TfidfVectorizer(max_features=1500, min_df=0, max_df=9)
-        vectorizer = vectorizer.fit_transform(suggestions)
-        VectorizedData = vectorizer.toarray()
-        if self.Mode == 'train':
-            self.TrainInput.append(VectorizedData)
-        elif self.Mode == 'test':
-            self.TestInput.append(VectorizedData)
-        elif self.Mode == 'predict':
-            self.PredictInput.append(VectorizedData)
-        if self.Mode == 'train':
-            return self.TrainInput,self.TrainTarget
-        elif self.Mode == 'test':
-            return self.TestInput,self.TestTarget
-        elif self.Mode == 'predict':
+            InputDatasetFile = open("Datasets/InputDataset.json", "r", encoding ='utf8')
+            DataFile = json.load(InputDatasetFile)
+            InputDatasetFile.close()
+            vectorizer = TfidfVectorizer()
+            vectorizer.fit_transform(DataFile)
+            self.PredictInput = np.squeeze(vectorizer.transform(self.PredictArray).toarray())
             return self.PredictInput
-
-# Read data and setup maps for integer encoding and decoding.
-# ProjectDir = os.getcwd()
-# file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
-# DataFile = json.load(file)
-# train_data = DataFile['train_dataset']
-# test_data = DataFile['test_dataset']
-# Preprocessing = PreprocessingDataset()
-# TrainInput,TrainTarget = Preprocessing.Start(train_data,'train')
-# TestInput,TestTarget = Preprocessing.Start(test_data,'test')
-# clf = LogisticRegression(random_state=0).fit(TrainInput, TrainTarget)
-# clf.predict(X[:2, :])
-# preprocessing = PreProcessingDataset()
-# preprocessing.Start(test)
