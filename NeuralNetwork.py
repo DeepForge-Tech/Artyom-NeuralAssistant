@@ -28,7 +28,7 @@ file.close()
 
 
 learning_rate = 0.001
-EPOCHS = 500000
+EPOCHS = 100000
 BATCH_SIZE = 50
 
 class NeuralNetwork:

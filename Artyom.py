@@ -16,8 +16,20 @@ from pyowm import OWM
 from num2words import num2words
 import threading
 from MusicManager import MusicManager
+import platform
 
 # Инициализация параметров
+UserDir = os.path.expanduser('~')
+file = open('Settings.json','r',encoding='utf-8')
+DataFile = json.load(file)
+CATEGORIES = DataFile['CATEGORIES']
+CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
+file.close()
+ProjectDir = os.path.dirname(os.path.realpath(__file__))
+NAMES = ['Артём','Артемий','Артёша','Артемьюшка','Артя','Артюня','Артюха','Артюша','Артёмка','Артёмчик','Тёма']
+file = open('ArtyomAnswers.json','r',encoding='utf-8')
+ANSWERS  = json.load(file)
+file.close()
 language = 'ru'
 model_id = 'ru_v3'
 sample_rate = 48000 # 48000
@@ -27,20 +39,20 @@ put_yo = True
 device = torch.device('cpu') # cpu или gpu
 MusicManager = MusicManager()
 Preprocessing = PreprocessingDataset() 
+network = NeuralNetwork(CATEGORIES,CATEGORIES_TARGET)
+network.load()
 owm = OWM('2221d769ed67828e858caaa3803161ea')
-ProjectDir = os.path.dirname(os.path.realpath(__file__))
-NAMES = ['Артём','Артемий','Артёша','Артемьюшка','Артя','Артюня','Артюха','Артюша','Артёмка','Артёмчик','Тёма']
-CATEGORIES = ['communication','weather','youtube','webbrowser','music','news','todo','calendar','joikes','exit','time','gratitude','stopwatch','off-stopwatch','pause-stopwatch','unpause-stopwatch','off-music','timer','off-timer','pause-timer','unpause-timer','turn-up-music','turn-down-music','pause-music','unpause-music','shutdown','reboot','hibernation']
-file = open('ArtyomAnswers.json','r',encoding='utf-8')
-ANSWERS  = json.load(file)
-file.close()
 
 class ArtyomAssistant:
     def __init__(self):
         self.Functions = {
             'communication':self.CommunicationCommand,'weather':self.WeatherCommand,
-            'time':self.TimeCommand,"music":self.MusicCommand,
-            'youtube':self.YoutubeCommand,'webbrowser':self.WebbrowserCommand
+            'time':self.TimeCommand,'youtube':self.YoutubeCommand,
+            'webbrowser':self.WebbrowserCommand,'hibernation':self.HibernationCommand,'reboot':self.RebootCommand,
+            'shutdown':self.ShutdownCommand,'news':self.NewsCommand,
+            'todo':self.TodoCommand,'calendar':self.CalendarCommand,
+            'joikes':self.JoikesCommand,'exit':self.ExitCommand,
+            'gratitude':self.GratitudeCommand
         }
         self.RecognitionModel = Model('model')
         self.Recognition = KaldiRecognizer(self.RecognitionModel,16000)
@@ -133,15 +145,58 @@ class ArtyomAssistant:
         self.Tell(random.choice(ANSWERS['webbrowser']))
         webbrowser.open_new_tab('https://google.com')
 
+    def StopwatchCommand(self,command):
+        pass
+
+    def HibernationCommand(self):
+        pass
+
+    def RebootCommand(self):
+        self.Tell(random.choice(ANSWERS['reboot']))
+        os.system("shutdown -t 0 -r -f")
+
+    def ShutdownCommand(self):
+        self.Tell(random.choice(ANSWERS['shutdown']))
+        os.system('shutdown /p /f')
+
+    def NewsCommand(self):
+        pass
+
+    def TodoCommand(self):
+        self.Tell("Эта функция пока не доступна")
+
+    def CalendarCommand(self):
+        self.Tell("Эта функция пока не доступна")
+
+    def JoikesCommand(self):
+        pass
+
+    def ExitCommand(self):
+        self.Tell(random.choice(ANSWERS['exit']))
+
+    def GratitudeCommand(self):
+        self.Tell(random.choice(ANSWERS['gratitude']))
+
+    def VSCode(self):
+        if platform.system() == 'Windows':
+            if os.path.exists(os.path.join(UserDir,'/AppData/Local/Programs/Microsoft VS Code/Code.exe')):
+                self.Tell(random.choice(ANSWERS['vscode']))
+                os.startfile(os.path.join(UserDir,'/AppData/Local/Programs/Microsoft VS Code/Code.exe'))
+            else:
+                self.Tell(random.choice(['У вас не установлена эта программа','Редактор кода не установлен на этом компьютере','Программа не установлена на этом компьютере']))
+        elif platform.system() == 'Linux':
+            self.Tell("Эта функция пока не доступна")
+        elif platform.system() == 'Darwin':
+            self.Tell("Эта функция пока не доступна")
+
     def CommandManager(self,PredictedValue):
         operation = CATEGORIES[PredictedValue]
         if operation == 'music' or operation == 'off-music' or operation == 'pause-music' or operation == 'unpause-music':
-            self.Functions[operation](operation)
+            self.MusicCommand(operation)
+        elif operation == 'stopwatch' or operation == 'off-stopwatch' or operation == 'pause-stopwatch' or 'unpause-stopwatch':
+            self.StopwatchCommand(operation)
         else:
             self.Functions[operation]()
-
-
-
 
     def Start(self):
         for text in self.SpeechRecognition():
@@ -150,13 +205,10 @@ class ArtyomAssistant:
                 if name.lower() in text and len(text.split()) > 1:
                     print('hello')
                     Input = text.replace(name.lower(),"")
-                    # Input = [text]
-                    # Input = Preprocessing.Start(PredictArray=Input,mode = 'predict')
-                    # Input = Preprocessing.ToMatrix(Input)
-                    # network = NeuralNetwork(len(Input))
-                    # network.open()
-                    # PredictedValue = network.predict(Input)
-                    self.CommandManager(3)
+                    Input = [text]
+                    Input = Preprocessing.Start(PredictArray = Input,mode = 'predict')
+                    PredictedValue = network.predict(Input)
+                    self.CommandManager(PredictedValue)
                     break
                 elif name.lower() in text and len(text.split()) == 1:
                     self.Tell('Чем могу помочь?')

@@ -27,7 +27,14 @@
         "unpause-music":24,
         "shutdown":25,
         "reboot":26,
-        "hibernation":27
+        "hibernation":27,
+        "alarm":28,
+        "off-alarm":29,
+        "favourite-app":30,
+        "vscode":31,
+        "notepad":32,
+        "mail":33,
+        "date":34
     },
     "CATEGORIES_TARGET":{
         "0":"communication",
@@ -57,6 +64,13 @@
         "24":"unpause-music",
         "25":"shutdown",
         "26":"reboot",
-        "27":"hibernation"
+        "27":"hibernation",
+        "28":"alarm",
+        "29":"off-alarm",
+        "30":"favourite-app",
+        "31":"vscode",
+        "32":"notepad",
+        "33":"mail",
+        "34":"date"
     }
 }
