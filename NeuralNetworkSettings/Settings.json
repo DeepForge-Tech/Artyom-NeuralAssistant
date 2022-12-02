@@ -34,7 +34,9 @@
         "vscode":31,
         "notepad":32,
         "mail":33,
-        "date":34
+        "date":34,
+        "how_are_you":35,
+        "what_you_do":36
     },
     "CATEGORIES_TARGET":{
         "0":"communication",
@@ -71,6 +73,11 @@
         "31":"vscode",
         "32":"notepad",
         "33":"mail",
-        "34":"date"
-    }
+        "34":"date",
+        "35":"how_are_you",
+        "36":"what_you_do"
+    },
+    "learning_rate":0.001,
+    "EPOCHS":100000,
+    "BATCH_SIZE":50
 }

@@ -2,33 +2,38 @@ from NeuralNetwork import NeuralNetwork
 import os
 import json
 from PreprocessingText import PreprocessingDataset
-# Initialization parametrs
-# Read data and setup maps for integer encoding and decoding.
+
+# Подготовка датасета
 ProjectDir = os.getcwd()
-file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
-DataFile = json.load(file)
-train_data = DataFile['train_dataset']
-test_data = DataFile['test_dataset']
-Preprocessing = PreprocessingDataset()
-TrainInput,TrainTarget = Preprocessing.Start(Dictionary = train_data,mode = 'train')
-TestInput,TestTarget = Preprocessing.Start(Dictionary = test_data,mode = 'test')
-TrainInput = Preprocessing.ToMatrix(TrainInput)
-TrainTarget = Preprocessing.ToNumpyArray(TrainTarget)
-TestInput = Preprocessing.ToMatrix(TestInput)
-TestTarget = Preprocessing.ToNumpyArray(TestTarget)
+if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
+    file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
+    Preprocessing = PreprocessingDataset()
+    DataFile = json.load(file)
+    dataset = DataFile['dataset']
+    TrainInput,TrainTarget = Preprocessing.Start(Dictionary = dataset,mode = 'train')
+    file.close()
+else:
+    raise RuntimeError
+
+if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
+    file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
+    DataFile = json.load(file)
+    CATEGORIES = DataFile['CATEGORIES']
+    CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
+    file.close()
+else:
+    raise RuntimeError
 
 def Train():
-    network = NeuralNetwork(len(TrainInput[0]))
-    network.train(TrainInput,TrainTarget)
-    # network = NeuralNetwork(len(TestInput[0]))
-    # network.train(TestInput,TestTarget)
-    # logr = linear_model.LogisticRegression()
-    # logr.fit(TrainInput,TrainTarget)
-    # Test = ['Включи музыку']
-    # Test = Preprocessing.Start(PredictArray=Test,mode = 'predict')
-    # Test = Preprocessing.ToMatrix(Test)
-    # predicted = logr.predict_proba(Test.reshape(1,-1))
-    # print(predicted)
+    if __name__ == '__main__':
+        # Вызов класса нейросети
+        network = NeuralNetwork(CATEGORIES,CATEGORIES_TARGET)
+        # Вызов функции тренировки нейросети
+        network.train(TrainInput,TrainTarget)
+        network.load()
+        # Функция для вызова нейросети
+        network.predict(Preprocessing.Start(PredictArray = ['скажи время'],mode = 'predict'))
+        
 if __name__ == '__main__':
     Train()
     

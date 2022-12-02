@@ -7,16 +7,22 @@ import random
 
 # Подготовка датасета
 ProjectDir = os.getcwd()
-file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
-DataFile = json.load(file)
-dataset = DataFile['dataset']
-file.close()
+if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
+    file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
+    DataFile = json.load(file)
+    dataset = DataFile['dataset']
+    file.close()
+else:
+    raise RuntimeError
 
-file = open('Settings.json','r',encoding='utf-8')
-DataFile = json.load(file)
-CATEGORIES = DataFile['CATEGORIES']
-CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
-file.close()
+if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
+    file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
+    DataFile = json.load(file)
+    CATEGORIES = DataFile['CATEGORIES']
+    CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
+    file.close()
+else:
+    raise RuntimeError
 
 
 class PreprocessingDataset:

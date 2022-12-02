@@ -1,39 +1,50 @@
 # Импортирование библиотек для обучения и проверки нейросети
 import numpy as np
-import numpy as np
 import os
 import json
 from PreprocessingText import PreprocessingDataset
 import matplotlib.pyplot as plt
 from rich.progress import track
 import mplcyberpunk
+from loguru import logger
 
 plt.style.use("cyberpunk")
 np.random.seed(0)
 
-# Подготовка датасета
 ProjectDir = os.getcwd()
-file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
-Preprocessing = PreprocessingDataset()
-DataFile = json.load(file)
-dataset = DataFile['dataset']
-TrainInput,TrainTarget = Preprocessing.Start(Dictionary = dataset,mode = 'train')
-file.close()
+logger.add(os.path.join(ProjectDir,'Logs/DownloadYoutubeBot.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
 
-file = open('Settings.json','r',encoding='utf-8')
-DataFile = json.load(file)
-CATEGORIES = DataFile['CATEGORIES']
-CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
-file.close()
+# # Подготовка датасета
+# if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
+#     file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
+#     Preprocessing = PreprocessingDataset()
+#     DataFile = json.load(file)
+#     dataset = DataFile['dataset']
+#     TrainInput,TrainTarget = Preprocessing.Start(Dictionary = dataset,mode = 'train')
+#     file.close()
+# else:
+#     raise RuntimeError
+
+# if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
+#     file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
+#     DataFile = json.load(file)
+#     CATEGORIES = DataFile['CATEGORIES']
+#     CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
+#     file.close()
+# else:
+#     raise RuntimeError
 
 
 learning_rate = 0.001
 EPOCHS = 100000
 BATCH_SIZE = 50
+MinimumThreshold = 0.6
 
 class NeuralNetwork:
     # Функция инициализации переменных
     def __init__(self,CATEGORIES:dict = {},CATEGORIES_TARGET:list = []):
+        self.CATEGORIES = CATEGORIES
+        self.CATEGORIES_TARGET = CATEGORIES_TARGET
         self.INPUT_DIM = 64
         self.HIDDEN_DIM = 512
         self.OUTPUT_DIM = len(CATEGORIES_TARGET)
@@ -41,18 +52,22 @@ class NeuralNetwork:
         self.LossArray = []
         self.Loss = 0
         self.LocalLoss = 0.5
+        self.PathLossGraph = os.path.join(ProjectDir,'Graphics','Loss.png')
+        self.Accuracy = 0
 
     # Функция для генерации весов нейросети
     def GenerateWeights(self):
-        self.w1 = np.random.rand(self.INPUT_DIM, self.HIDDEN_DIM)
-        self.b1 = np.random.rand(1, self.HIDDEN_DIM)
-        self.w2 = np.random.rand(self.HIDDEN_DIM, self.OUTPUT_DIM)
-        self.b2 = np.random.rand(1, self.OUTPUT_DIM)
-        self.w1 = (self.w1 - 0.5) * 2 * np.sqrt(1/self.INPUT_DIM)
-        self.b1 = (self.b1 - 0.5) * 2 * np.sqrt(1/self.INPUT_DIM)
-        self.w2 = (self.w2 - 0.5) * 2 * np.sqrt(1/self.HIDDEN_DIM)
-        self.b2 = (self.b2 - 0.5) * 2 * np.sqrt(1/self.HIDDEN_DIM)
-
+        try:
+            self.w1 = np.random.rand(self.INPUT_DIM, self.HIDDEN_DIM)
+            self.b1 = np.random.rand(1, self.HIDDEN_DIM)
+            self.w2 = np.random.rand(self.HIDDEN_DIM, self.OUTPUT_DIM)
+            self.b2 = np.random.rand(1, self.OUTPUT_DIM)
+            self.w1 = (self.w1 - 0.5) * 2 * np.sqrt(1/self.INPUT_DIM)
+            self.b1 = (self.b1 - 0.5) * 2 * np.sqrt(1/self.INPUT_DIM)
+            self.w2 = (self.w2 - 0.5) * 2 * np.sqrt(1/self.HIDDEN_DIM)
+            self.b2 = (self.b2 - 0.5) * 2 * np.sqrt(1/self.HIDDEN_DIM)
+        except Exception as Error:
+            logger.error(f"Exception error: {Error}.")
     # Функция активации
     def relu(self,t):
         return np.maximum(t, 0)
@@ -73,42 +88,55 @@ class NeuralNetwork:
 
     # Производная функции активации
     def deriv_relu(self,t):
-        return (t >= 0).astype(float)
-
+        try:
+            return (t >= 0).astype(float)
+        except Exception as Error:
+            logger.error(f"Exception error: {Error}.")
+        
     # Функция активации
     def sigmoid(self,x):
-        return 1 / (1 + np.exp(-x))
-    
+        try:
+            return 1 / (1 + np.exp(-x))
+        except Exception as Error:
+            logger.error(f"Exception error: {Error}.")
     # Производная функции активации
     def deriv_sigmoid(self,y):
-        return y * (1 - y)
-
+        try:
+            return y * (1 - y)
+        except Exception as Error:
+            logger.error(f"Exception error: {Error}.")
     # Функция прямого распространени нейросети
     def FeedForward(self,Input):
-        self.h1 = Input @ self.w1 + self.b1
-        self.HiddenLayer = self.sigmoid(self.h1)
-        self.o = self.HiddenLayer @ self.w2 + self.b2
-        self.OutputLayer = self.softmax(self.o)
-        return self.OutputLayer
-
+        try:
+            self.h1 = Input @ self.w1 + self.b1
+            self.HiddenLayer = self.sigmoid(self.h1)
+            self.o = self.HiddenLayer @ self.w2 + self.b2
+            self.OutputLayer = self.softmax(self.o)
+            return self.OutputLayer
+        except Exception as Error:
+            logger.error(f"Exception error: {Error}.")
     # Функция обратного распространения ошибки нейросети
     def BackwardPropagation(self,Input,Target):
-        y_full = self.to_full(Target, self.OUTPUT_DIM)
-        d_o = self.OutputLayer - y_full
-        d_w2 = self.HiddenLayer.T @ d_o
-        d_b2 = np.sum(d_o, axis=0, keepdims=True)
-        d_hl = d_o @ self.w2.T
-        d_h1 = d_hl * self.deriv_sigmoid(self.h1)
-        d_w1 = Input.T @ d_h1
-        d_b1 = np.sum(d_h1, axis=0, keepdims=True)
+        try:
+            y_full = self.to_full(Target, self.OUTPUT_DIM)
+            d_o = self.OutputLayer - y_full
+            d_w2 = self.HiddenLayer.T @ d_o
+            d_b2 = np.sum(d_o, axis=0, keepdims=True)
+            d_hl = d_o @ self.w2.T
+            d_h1 = d_hl * self.deriv_sigmoid(self.h1)
+            d_w1 = Input.T @ d_h1
+            d_b1 = np.sum(d_h1, axis=0, keepdims=True)
 
-        # Обновление весов и смещений нейросети
-        self.w1 = self.w1 - learning_rate * d_w1
-        self.b1 = self.b1 - learning_rate * d_b1
-        self.w2 = self.w2 - learning_rate * d_w2
-        self.b2 = self.b2 - learning_rate * d_b2
+            # Обновление весов и смещений нейросети
+            self.w1 = self.w1 - learning_rate * d_w1
+            self.b1 = self.b1 - learning_rate * d_b1
+            self.w2 = self.w2 - learning_rate * d_w2
+            self.b2 = self.b2 - learning_rate * d_b2
+        except Exception as Error:
+            logger.error(f"Exception error: {Error}.")
 
     def train(self,TrainInput,TrainTarget):
+        logger.info("Neural network was started of training.")
         # Генераци весов нейросети по длине входного массива(датасета)
         self.INPUT_DIM = len(TrainInput[0])
         self.GenerateWeights()
@@ -128,20 +156,28 @@ class NeuralNetwork:
             self.LossArray.append(self.Loss)
         # Вывод графика ошибки нейросети
         plt.plot(self.LossArray)
-        plt.show() 
+        # plt.show() 
         # Сохранение картинки с графиком
-        plt.savefig(os.path.join(ProjectDir,'Graphics','Loss.png'))
+        plt.savefig(self.PathLossGraph)
         # Вызов функции проверки нейросети с последующим выводом количества правильных ответов в виде процентов
-        self.score()
+        self.Accuracy = self.score(TrainInput,TrainTarget)
+        logger.info("Neural network was trained on the dataset.")
+        logger.info(f"Accuracy: {self.Accuracy}")
+        logger.info(f"Loss graph was saved at the path: {self.PathLossGraph}")
 
     # Функция для вызова нейросети
     def predict(self,Input):
-        PredictedValue = np.argmax(self.FeedForward(Input))
-        print(CATEGORIES_TARGET[str(PredictedValue)])
-        return CATEGORIES_TARGET[str(PredictedValue)]
+        PredictedArray = self.softmax(self.FeedForward(Input))
+        PredictedValue = np.argmax(self.FeedForward(PredictedArray))
+        if float(PredictedArray[PredictedValue]) >= MinimumThreshold:
+            print(self.CATEGORIES_TARGET[str(PredictedValue)])
+            return self.CATEGORIES_TARGET[str(PredictedValue)]
+        else:
+            # Если нейросеть не уверенна в своём ответе,то отправляется ответ в виде фразы 
+            return "don't_know"
     
     # Функция проверки нейросети с последующим выводом количества правильных ответов в виде процентов
-    def score(self):
+    def score(self,TrainInput,TrainTarget):
         correct = 0
         for Input,Target in zip(TrainInput,TrainTarget):
             PredictedValue = self.FeedForward(Input)
@@ -162,12 +198,13 @@ class NeuralNetwork:
         self.w2 = ParametrsFile['arr_1']
         self.b1 = ParametrsFile['arr_2']
         self.b2 = ParametrsFile['arr_3']
+        logger.info("Weights of neural network was loaded.")
 
-if __name__ == '__main__':
-    # Вызов класса нейросети
-    network = NeuralNetwork(CATEGORIES,CATEGORIES_TARGET)
-    # Вызов функции тренировки нейросети
-    network.train(TrainInput,TrainTarget)
-    # network.load()
-    # Функция для вызова нейросети
-    network.predict(Preprocessing.Start(PredictArray = ['скажи время'],mode = 'predict'))
+# if __name__ == '__main__':
+#     # Вызов класса нейросети
+#     network = NeuralNetwork(CATEGORIES,CATEGORIES_TARGET)
+#     # Вызов функции тренировки нейросети
+#     network.train(TrainInput,TrainTarget)
+#     # network.load()
+#     # Функция для вызова нейросети
+#     network.predict(Preprocessing.Start(PredictArray = ['скажи время'],mode = 'predict'))

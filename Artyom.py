@@ -190,7 +190,11 @@ class ArtyomAssistant:
             self.Tell("Эта функция пока не доступна")
 
     def CommandManager(self,PredictedValue):
-        operation = CATEGORIES[PredictedValue]
+        if PredictedValue == "don't_know":
+            self.Tell(random.choice(ANSWERS["don't_know"]))
+        else:
+            operation = CATEGORIES[PredictedValue]
+
         if operation == 'music' or operation == 'off-music' or operation == 'pause-music' or operation == 'unpause-music':
             self.MusicCommand(operation)
         elif operation == 'stopwatch' or operation == 'off-stopwatch' or operation == 'pause-stopwatch' or 'unpause-stopwatch':
