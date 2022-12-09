@@ -1,7 +1,7 @@
 from NeuralNetwork import NeuralNetwork
 import os
 import json
-from PreprocessingText import PreprocessingDataset
+from Preprocessing import PreprocessingDataset
 
 # Подготовка датасета
 ProjectDir = os.getcwd()
@@ -10,7 +10,7 @@ if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
     Preprocessing = PreprocessingDataset()
     DataFile = json.load(file)
     dataset = DataFile['dataset']
-    TrainInput,TrainTarget = Preprocessing.Start(Dictionary = dataset,mode = 'train')
+    TrainInput,TrainTarget = Preprocessing.PreprocessingText(Dictionary = dataset,mode = 'train')
     file.close()
 else:
     raise RuntimeError
@@ -32,7 +32,7 @@ def Train():
         network.train(TrainInput,TrainTarget)
         network.load()
         # Функция для вызова нейросети
-        network.predict(Preprocessing.Start(PredictArray = ['скажи время'],mode = 'predict'))
+        network.predict(Preprocessing.PreprocessingText(PredictArray = ['скажи время'],mode = 'predict'))
         
 if __name__ == '__main__':
     Train()

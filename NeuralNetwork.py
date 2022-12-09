@@ -2,7 +2,7 @@
 import numpy as np
 import os
 import json
-from PreprocessingText import PreprocessingDataset
+from Preprocessing import PreprocessingDataset
 import matplotlib.pyplot as plt
 from rich.progress import track
 import mplcyberpunk
@@ -12,7 +12,7 @@ plt.style.use("cyberpunk")
 np.random.seed(0)
 
 ProjectDir = os.getcwd()
-logger.add(os.path.join(ProjectDir,'Logs/DownloadYoutubeBot.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
+logger.add(os.path.join(ProjectDir,'Logs/NeuralNetwork.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
 
 # # Подготовка датасета
 # if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
@@ -20,7 +20,7 @@ logger.add(os.path.join(ProjectDir,'Logs/DownloadYoutubeBot.log'),format="{time}
 #     Preprocessing = PreprocessingDataset()
 #     DataFile = json.load(file)
 #     dataset = DataFile['dataset']
-#     TrainInput,TrainTarget = Preprocessing.Start(Dictionary = dataset,mode = 'train')
+#     TrainInput,TrainTarget = Preprocessing.PreprocessingText(Dictionary = dataset,mode = 'train')
 #     file.close()
 # else:
 #     raise RuntimeError
@@ -207,4 +207,4 @@ class NeuralNetwork:
 #     network.train(TrainInput,TrainTarget)
 #     # network.load()
 #     # Функция для вызова нейросети
-#     network.predict(Preprocessing.Start(PredictArray = ['скажи время'],mode = 'predict'))
+#     network.predict(Preprocessing.PreprocessingText(PredictArray = ['скажи время'],mode = 'predict'))

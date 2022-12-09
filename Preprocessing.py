@@ -4,6 +4,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import os
 import json
 import random
+import librosa
+import librosa.display
+from sklearn.preprocessing import LabelEncoder
+from rich.progress import track
 
 # Подготовка датасета
 ProjectDir = os.getcwd()
@@ -44,13 +48,47 @@ class PreprocessingDataset:
     def ToNumpyArray(self,array):
         return np.array(array)
 
-    def Start(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
+    def PreprocessingAudio(self,PathAudio:str,mode:str = 'train'):
+        self.Mode = mode
+        self.PathAudio = PathAudio
+        self.DatasetFiles = list(os.walk(self.PathAudio))
+        for (root,dirs,files) in track(os.walk(self.PathAudio,topdown=True),description='[green]Preprocessing'):
+            for file in files[:10]:
+                if file.endswith('.wav'):
+                    self.AudioFile = os.path.join(root,file)
+                    audio,sample_rate = librosa.load(self.AudioFile,res_type='kaiser_fast')
+                    mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=40)
+                    mfccs = np.mean(mfccs.T,axis=0)
+                    self.x.append(mfccs)
+                elif file.endswith('.txt'):
+                    file = open(os.path.join(root,file),'r+',encoding="utf-8")
+                    DataFile = file.read()
+                    self.y.append(DataFile)
+                    file.close()
+            # print (root)
+            # print("\n" + "\n" + "\n")
+            # print (dirs)
+            # print("\n" + "\n" + "\n")
+            # print (files)
+            # print("\n" + "\n" + "\n")
+            # print ('--------------------------------')
+        InputDatasetFile = open("Datasets/SpeechInputDataset.json", "w", encoding ='utf-8')
+        json.dump(self.y, InputDatasetFile,ensure_ascii=False,sort_keys=True, indent=2)
+        InputDatasetFile.close()
+        labelencoder=LabelEncoder()
+        labelencoder = labelencoder.fit_transform(self.y)
+        self.TrainTarget = self.ToNumpyArray(labelencoder)
+        self.TrainInput = self.ToMatrix(self.x)
+        print(len(self.y[0]))
+        return self.TrainInput,self.TrainTarget
+
+    def PreprocessingText(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
         self.Mode = mode
         if self.Mode == 'train' or self.Mode == 'test':
             self.Dictionary = list(Dictionary.items())
             random.shuffle(self.Dictionary)
             self.Dictionary = dict(self.Dictionary)
-            for intent in self.Dictionary:
+            for intent in track(self.Dictionary,description='[green]Preprocessing'):
                 for questions in Dictionary[intent]['questions']:
                     self.x.append(questions)
                     self.y.append(intent)
@@ -67,7 +105,7 @@ class PreprocessingDataset:
             json.dump(self.x, InputDatasetFile,ensure_ascii=False,sort_keys=True, indent=2)
             InputDatasetFile.close()
             if self.Mode == 'train':
-                self.TrainInput = np.squeeze(VectorizedData)
+                self.TrainInput = self.ToMatrix(VectorizedData)
                 return self.TrainInput,self.TrainTarget
             elif self.Mode == 'test':
                 self.TestInput = VectorizedData
@@ -80,5 +118,7 @@ class PreprocessingDataset:
             InputDatasetFile.close()
             vectorizer = TfidfVectorizer()
             vectorizer.fit_transform(DataFile)
-            self.PredictInput = np.squeeze(vectorizer.transform(self.PredictArray).toarray())
+            self.PredictInput = self.ToMatrix(vectorizer.transform(self.PredictArray).toarray())
             return self.PredictInput
+
+# PreprocessingDataset().PreprocessingAudio(PathAudio="C:/Users/Blackflame576/Documents/Blackflame576/DigitalBit/Artyom-NeuralAssistant/Datasets/SpeechDataset/")
