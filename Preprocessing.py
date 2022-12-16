@@ -6,7 +6,7 @@ import json
 import random
 import librosa
 import librosa.display
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder,OneHotEncoder
 from rich.progress import track
 
 # Подготовка датасета
@@ -54,11 +54,11 @@ class PreprocessingDataset:
         if self.Mode == 'train' or self.Mode == 'test':
             self.DatasetFiles = list(os.walk(self.PathAudio))
             for (root,dirs,files) in track(os.walk(self.PathAudio,topdown=True),description='[green]Preprocessing'):
-                for file in files[:10]:
+                for file in files[:2]:
                     if file.endswith('.wav'):
                         self.AudioFile = os.path.join(root,file)
                         audio,sample_rate = librosa.load(self.AudioFile,res_type='kaiser_fast')
-                        mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=40)
+                        mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=20)
                         mfccs = np.mean(mfccs.T,axis=0)
                         self.x.append(mfccs)
                     elif file.endswith('.txt'):
@@ -76,25 +76,35 @@ class PreprocessingDataset:
             InputDatasetFile = open("Datasets/SpeechInputDataset.json", "w", encoding ='utf-8')
             json.dump(self.y, InputDatasetFile,ensure_ascii=False,sort_keys=True, indent=2)
             InputDatasetFile.close()
-            labelencoder=LabelEncoder()
-            labelencoder = labelencoder.fit_transform(self.y)
-            self.TrainTarget = self.ToNumpyArray(labelencoder)
+            labelencoder=OneHotEncoder()
+            labelencoder = labelencoder.fit_transform(np.array(self.y).reshape(-1,1))
+            VectorizedData = np.array(labelencoder.toarray(),dtype='int')
+            # vectorizer = OneHotEncoder()
+            # vectorizer = vectorizer.fit_transform(np.array(self.y).reshape(-1,1))
+            # VectorizedData = vectorizer.toarray()
+            self.TrainTarget = VectorizedData
             self.TrainInput = self.ToMatrix(self.x)
-            print(len(self.y[0]))
+            print(self.TrainTarget)
             return self.TrainInput,self.TrainTarget
             
-        elif self.Mode == 'predcit':
+        elif self.Mode == 'predict':
             InputDatasetFile = open("Datasets/SpeechInputDataset.json", "r", encoding ='utf8')
             DataFile = json.load(InputDatasetFile)
             InputDatasetFile.close()
-            labelencoder=LabelEncoder()
-            labelencoder = labelencoder.fit_transform(DataFile)
+            
             self.AudioFile = self.PathAudio
             audio,sample_rate = librosa.load(self.AudioFile,res_type='kaiser_fast')
-            mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=40)
+            mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=64)
             mfccs = np.mean(mfccs.T,axis=0)
-            self.PredictInput = self.ToMatrix(labelencoder.transform(mfccs))
+            labelencoder=LabelEncoder()
+            labelencoder = labelencoder.fit_transform(DataFile)
+            VectorizedData = labelencoder.transform(mfccs)
+            # vectorizer = OneHotEncoder()
+            # vectorizer.fit_transform(DataFile)
+            # VectorizedData = vectorizer.transform(mfccs).toarray()
+            self.PredictInput = self.ToMatrix(VectorizedData)
             return self.PredictInput
+
     def PreprocessingText(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
         self.Mode = mode
         if self.Mode == 'train' or self.Mode == 'test':
@@ -134,4 +144,9 @@ class PreprocessingDataset:
             self.PredictInput = self.ToMatrix(vectorizer.transform(self.PredictArray).toarray())
             return self.PredictInput
 
-# PreprocessingDataset().PreprocessingAudio(PathAudio="C:/Users/Blackflame576/Documents/Blackflame576/DigitalBit/Artyom-NeuralAssistant/Datasets/SpeechDataset/")
+# TrainInput,TrainTarget = PreprocessingDataset().PreprocessingAudio(PathAudio="C:/Users/Blackflame576/Documents/Blackflame576/DigitalBit/Artyom-NeuralAssistant/Datasets/SpeechDataset/")
+# x = np.linspace(0, 2*np.pi, 8)
+# y = np.sin(x) + np.random.normal(0, 0.4, 8)
+# from sklearn.linear_model import LogisticRegression
+# clf = LogisticRegression(random_state=0).fit(TrainInput,TrainTarget)
+# clf.score(TrainInput,np.array(TrainTarget).reshape(-1,1))

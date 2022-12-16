@@ -781,164 +781,162 @@
 
 # network = NeuralNetwork()
 # network.train(TrainInput,TrainTarget,10000)
-# import random
-# import numpy as np
-# import nltk 
-# import random
-# import numpy as np
-# from sklearn.feature_extraction.text import CountVectorizer
-# from sklearn.ensemble import RandomForestClassifier
-# import os
-# import json
-# from PreprocessingText import PreprocessingDataset
+import random
+import numpy as np
+import random
+import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.ensemble import RandomForestClassifier
+import os
+import json
+from Preprocessing import PreprocessingDataset
 
-# # Подготовка датасета
-# ProjectDir = os.getcwd()
-# file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
-# Preprocessing = PreprocessingDataset()
-# DataFile = json.load(file)
-# dataset = DataFile['dataset']
-# TrainInput,TrainTarget = Preprocessing.Start(Dictionary = dataset,mode = 'train')
-# file.close()
+# Подготовка датасета
+ProjectDir = os.getcwd()
+AudioDatasetDir = os.path.join(ProjectDir,"Datasets/SpeechDataset/")
+# logger.add(os.path.join(ProjectDir,'Logs/SpeechNeuralNetwork.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
 
-# file = open('Settings.json','r',encoding='utf-8')
-# DataFile = json.load(file)
-# CATEGORIES = DataFile['CATEGORIES']
-# CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
-# file.close()
+INPUT_DIM = 20
+OUT_DIM = 256
+H_DIM = 64
+E = 1
+def relu(t):
+    return np.maximum(t, 0)
 
-# INPUT_DIM = 60
-# OUT_DIM = 28
-# H_DIM = 512
+def softmax(t):
+    out = np.exp(t)
+    return out / np.sum(out)
 
-# def relu(t):
-#     return np.maximum(t, 0)
+def softmax_batch(t):
+    out = np.exp(t)
+    return out / np.sum(out, axis=1, keepdims=True)
 
-# def softmax(t):
-#     out = np.exp(t)
-#     return out / np.sum(out)
+def sparse_cross_entropy(z, y):
+    return -np.log(z[0, y])
 
-# def softmax_batch(t):
-#     out = np.exp(t)
-#     return out / np.sum(out, axis=1, keepdims=True)
+def sparse_cross_entropy_batch(z, y):
+    return -np.log(np.array([z[j, y[j]] for j in range(len(y))]))
 
-# def sparse_cross_entropy(z, y):
-#     return -np.log(z[0, y])
+def to_full(y, num_classes):
+    y_full = np.zeros((1, num_classes))
+    y_full[0, y] = 1
+    return y_full
 
-# def sparse_cross_entropy_batch(z, y):
-#     return -np.log(np.array([z[j, y[j]] for j in range(len(y))]))
+def to_full_batch(y, num_classes):
+    y_full = np.zeros((len(y), num_classes))
+    for j, yj in enumerate(y):
+        y_full[j, yj] = 1
+    return y_full
 
-# def to_full(y, num_classes):
-#     y_full = np.zeros((1, num_classes))
-#     y_full[0, y] = 1
-#     return y_full
+def relu_deriv(t):
+    return (t >= 0).astype(float)
 
-# def to_full_batch(y, num_classes):
-#     y_full = np.zeros((len(y), num_classes))
-#     for j, yj in enumerate(y):
-#         y_full[j, yj] = 1
-#     return y_full
+W1 = np.random.rand(INPUT_DIM, H_DIM)
+b1 = np.random.rand(1, H_DIM)
+W2 = np.random.rand(H_DIM, OUT_DIM)
+b2 = np.random.rand(1, OUT_DIM)
 
-# def relu_deriv(t):
-#     return (t >= 0).astype(float)
+W1 = (W1 - 0.5) * 2 * np.sqrt(1/INPUT_DIM)
+b1 = (b1 - 0.5) * 2 * np.sqrt(1/INPUT_DIM)
+W2 = (W2 - 0.5) * 2 * np.sqrt(1/H_DIM)
+b2 = (b2 - 0.5) * 2 * np.sqrt(1/H_DIM)
 
-# W1 = np.random.rand(INPUT_DIM, H_DIM)
-# b1 = np.random.rand(1, H_DIM)
-# W2 = np.random.rand(H_DIM, OUT_DIM)
-# b2 = np.random.rand(1, OUT_DIM)
+ALPHA = 0.0002
+NUM_EPOCHS = 10000
+BATCH_SIZE = 50
 
-# W1 = (W1 - 0.5) * 2 * np.sqrt(1/INPUT_DIM)
-# b1 = (b1 - 0.5) * 2 * np.sqrt(1/INPUT_DIM)
-# W2 = (W2 - 0.5) * 2 * np.sqrt(1/H_DIM)
-# b2 = (b2 - 0.5) * 2 * np.sqrt(1/H_DIM)
+loss_arr = []
+class NeuralNetwork:
+  def __init__(self):
+    pass
 
-# ALPHA = 0.0002
-# NUM_EPOCHS = 10000
-# BATCH_SIZE = 50
+  def FeedForward(self,x,y):
+        global W1
+        global b1
+        global W2
+        global b2
+        global E
+        # Forward
+        self.t1 = x @ W1 + b1
+        self.h1 = relu(self.t1)
+        self.t2 = self.h1 @ W2 + b2
+        self.z = softmax_batch(self.t2)
+        E = np.sum(sparse_cross_entropy_batch(self.z, y))
+        loss_arr.append(E)
+        print(f'Error: {E}')
+        return self.z
 
-# loss_arr = []
-# class NeuralNetwork:
-#   def __init__(self):
-#     pass
+  def BackwardPropagation(self,x,y):
+        global W1
+        global b1
+        global W2
+        global b2
+        # Backward
+        y_full = to_full_batch(y, OUT_DIM)
+        dE_dt2 = self.z - y_full
+        dE_dW2 = self.h1.T @ dE_dt2
+        dE_db2 = np.sum(dE_dt2, axis=0, keepdims=True)
+        dE_dh1 = dE_dt2 @ W2.T
+        dE_dt1 = dE_dh1 * relu_deriv(self.t1)
+        dE_dW1 = x.T @ dE_dt1
+        dE_db1 = np.sum(dE_dt1, axis=0, keepdims=True)
 
-#   def FeedForward(self,x,y):
-#         global W1
-#         global b1
-#         global W2
-#         global b2
-#         # Forward
-#         self.t1 = x @ W1 + b1
-#         self.h1 = relu(self.t1)
-#         self.t2 = self.h1 @ W2 + b2
-#         self.z = softmax_batch(self.t2)
-#         E = np.sum(sparse_cross_entropy_batch(self.z, y))
-#         loss_arr.append(E)
-#         return self.z
+        # Update
+        W1 = W1 - ALPHA * dE_dW1
+        b1 = b1 - ALPHA * dE_db1
+        W2 = W2 - ALPHA * dE_dW2
+        b2 = b2 - ALPHA * dE_db2
+  def train(self,TrainInput,TrainTarget):
+    i = 0
+    while True:
+        if E > 0.4:
+        # for ep in range(NUM_EPOCHS):
+            # random.shuffle(dataset)
+            # for i in range(len(dataset) // BATCH_SIZE):
+            # for TrainInput,TrainTarget in zip(Tr,y):
+                # batch_x, batch_y = zip(*dataset[i*BATCH_SIZE : i*BATCH_SIZE+BATCH_SIZE])
+                i+=1
+                x = TrainInput#np.concatenate(batch_x, axis=0)
+                y = TrainTarget#np.array(batch_y)
+                PredictedValue = self.FeedForward(x,y)
+                self.BackwardPropagation(x,y)
+        elif E <=0.4:
+            break
+  def predict(self,x):
+      t1 = x @ W1 + b1
+      h1 = relu(t1)
+      t2 = h1 @ W2 + b2
+      z = softmax_batch(t2)
+      print(np.argmax(z))
+      return z
 
-#   def BackwardPropagation(self,x,y):
-#         global W1
-#         global b1
-#         global W2
-#         global b2
-#         # Backward
-#         y_full = to_full_batch(y, OUT_DIM)
-#         dE_dt2 = self.z - y_full
-#         dE_dW2 = self.h1.T @ dE_dt2
-#         dE_db2 = np.sum(dE_dt2, axis=0, keepdims=True)
-#         dE_dh1 = dE_dt2 @ W2.T
-#         dE_dt1 = dE_dh1 * relu_deriv(self.t1)
-#         dE_dW1 = x.T @ dE_dt1
-#         dE_db1 = np.sum(dE_dt1, axis=0, keepdims=True)
+TrainInput,TrainTarget = PreprocessingDataset().PreprocessingAudio(PathAudio=AudioDatasetDir,mode='train')
 
-#         # Update
-#         W1 = W1 - ALPHA * dE_dW1
-#         b1 = b1 - ALPHA * dE_db1
-#         W2 = W2 - ALPHA * dE_dW2
-#         b2 = b2 - ALPHA * dE_db2
-#   def train(self,TrainInput,TrainTarget):
-#         for ep in range(NUM_EPOCHS):
-#             # random.shuffle(dataset)
-#             # for i in range(len(dataset) // BATCH_SIZE):
-#             # for TrainInput,TrainTarget in zip(Tr,y):
-#                 # batch_x, batch_y = zip(*dataset[i*BATCH_SIZE : i*BATCH_SIZE+BATCH_SIZE])
-                
-#                 x = TrainInput#np.concatenate(batch_x, axis=0)
-#                 y = TrainTarget#np.array(batch_y)
-#                 PredictedValue = self.FeedForward(x,y)
-#                 self.BackwardPropagation(x,y)
-#   def predict(self,x):
-#       t1 = x @ W1 + b1
-#       h1 = relu(t1)
-#       t2 = h1 @ W2 + b2
-#       z = softmax_batch(t2)
-#       print(np.argmax(z))
-#       return z
+network = NeuralNetwork()
+network.train(TrainInput,TrainTarget)
+# network.predict(Preprocessing.Start(PredictArray = ['включи музыку'],mode = 'predict'))
+def calc_accuracy():
+    correct = 0
+    for x, y in dataset:
+        z = predict(x)
+        y_pred = np.argmax(z)
+        if y_pred == y:
+            correct += 1
+    acc = correct / len(dataset)
+    return acc
 
-# network = NeuralNetwork()
-# network.train(TrainInput,TrainTarget)
-# # network.predict(Preprocessing.Start(PredictArray = ['включи музыку'],mode = 'predict'))
-# def calc_accuracy():
-#     correct = 0
-#     for x, y in dataset:
-#         z = predict(x)
-#         y_pred = np.argmax(z)
-#         if y_pred == y:
-#             correct += 1
-#     acc = correct / len(dataset)
-#     return acc
+# accuracy = calc_accuracy()
+# print("Accuracy:", accuracy)
 
-# # accuracy = calc_accuracy()
-# # print("Accuracy:", accuracy)
+import matplotlib.pyplot as plt
+plt.plot(loss_arr)
+plt.show()
 
-# import matplotlib.pyplot as plt
-# plt.plot(loss_arr)
-# plt.show()
-
-test = {"notes":{}}
-test.update({"notes":{"03/12/22":[1]}})
-print(test)
-if test["notes"]["03/12/22"]:
-    test["notes"]["03/12/22"].append("test")
-    print(test["notes"]["03/12/22"])
-else:
-    test.update({"notes":{"03/12/22":[1]}})
+# test = {"notes":{}}
+# test.update({"notes":{"03/12/22":[1]}})
+# print(test)
+# if test["notes"]["03/12/22"]:
+#     test["notes"]["03/12/22"].append("test")
+#     print(test["notes"]["03/12/22"])
+# else:
+#     test.update({"notes":{"03/12/22":[1]}})
