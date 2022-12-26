@@ -58,7 +58,7 @@ class PreprocessingDataset:
                     if file.endswith('.wav'):
                         self.AudioFile = os.path.join(root,file)
                         audio,sample_rate = librosa.load(self.AudioFile,res_type='kaiser_fast')
-                        mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=20)
+                        mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=64)
                         mfccs = np.mean(mfccs.T,axis=0)
                         self.x.append(mfccs)
                     elif file.endswith('.txt'):

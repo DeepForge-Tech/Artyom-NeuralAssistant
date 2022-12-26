@@ -20,6 +20,9 @@ import platform
 from loguru import logger
 from datetime import date
 from win10toast import ToastNotifier
+from Alarm import Alarm
+from Timer import Timer
+from Stopwatch import Stopwatch
 
 # Инициализация параметров
 ProjectDir = os.path.dirname(os.path.realpath(__file__))
@@ -56,7 +59,9 @@ class ArtyomAssistant:
             'shutdown':self.ShutdownCommand,'news':self.NewsCommand,
             'todo':self.TodoCommand,'calendar':self.CalendarCommand,
             'joikes':self.JoikesCommand,'exit':self.ExitCommand,
-            'gratitude':self.GratitudeCommand
+            'gratitude':self.GratitudeCommand,'vscode':self.VSCodeCommand,
+            'todo':self.ToDoCommand,'alarm':self.AlarmCommand,
+            'timer':self.TimerCommand,'stopwatch':self.StopwatchCommand
         }
         self.RecognitionModel = Model('model')
         self.Recognition = KaldiRecognizer(self.RecognitionModel,16000)
@@ -149,9 +154,6 @@ class ArtyomAssistant:
         self.Tell(random.choice(ANSWERS['webbrowser']))
         webbrowser.open_new_tab('https://google.com')
 
-    def StopwatchCommand(self,command):
-        pass
-
     def HibernationCommand(self):
         if platform.system() == 'Windows':
             self.Tell(random.choice(ANSWERS['hibernation']))
@@ -197,7 +199,10 @@ class ArtyomAssistant:
     def GratitudeCommand(self):
         self.Tell(random.choice(ANSWERS['gratitude']))
 
-    def VSCode(self):
+    def ToDoCommand(self,command):
+        if command == 'todo':
+            pass
+    def VSCodeCommand(self):
         if platform.system() == 'Windows':
             if os.path.exists(os.path.join(UserDir,'/AppData/Local/Programs/Microsoft VS Code/Code.exe')):
                 self.Tell(random.choice(ANSWERS['vscode']))
@@ -209,6 +214,22 @@ class ArtyomAssistant:
         elif platform.system() == 'Darwin':
             self.Tell("Эта функция пока не доступна")
 
+    def TimerCommand(self,command):
+        if command == 'timer':
+            timer = Timer()
+            timer.Main()
+
+    def StopwatchCommand(self,command):
+        stopwatch = Stopwatch()
+        if command == 'stopwatch':
+            stopwatch.Main()
+        elif command == 'off-stopwatch':
+            stopwatch.Stop()
+        elif command == 'pause-stopwatch':
+            stopwatch.Pause()
+        elif command == 'unpause-stopwatch':
+            stopwatch.Unpause()
+    
     def CommandManager(self,PredictedValue):
         if PredictedValue == "don't_know":
             self.Tell(random.choice(ANSWERS["don't_know"]))
@@ -219,10 +240,18 @@ class ArtyomAssistant:
             self.MusicCommand(operation)
         elif operation == 'stopwatch' or operation == 'off-stopwatch' or operation == 'pause-stopwatch' or 'unpause-stopwatch':
             self.StopwatchCommand(operation)
+        elif operation == 'timer' or operation == 'off-timer' or operation == 'pause-timer' or operation == 'unpause-timer':
+            self.TimerCommand(operation)
         else:
             self.Functions[operation]()
 
     def Start(self):
+        Alarm_Class = Alarm()
+        AlarmThread = threading.Thread(target = Alarm_Class.CheckAlarm)
+        AlarmThread.start()
+        ToDo = TodoManager()
+        ToDoThread = threading.Thread(target = ToDo.CheckNote)
+        ToDoThread.start()
         for text in self.SpeechRecognition():
             print(text)
             for name in NAMES:
@@ -241,7 +270,8 @@ class ArtyomAssistant:
 class TodoManager(ArtyomAssistant):
     def __init__(self) -> None:
         self.UpdateNotes()
-        self.DefaultDate = date.today().strftime("%B %d, %Y")
+        self.LocalDate = date.today().strftime("%B %d, %Y")
+        self.LocalTime = (f"{time.strftime('%H')}:{time.strftime('%M')}")
         self.TodoNotes = {"notes":{}}
 
     def UpdateNotes(self):
@@ -260,7 +290,10 @@ class TodoManager(ArtyomAssistant):
             file.close()
 
     def UpdateDate(self):
-        self.DefaultDate = date.today().strftime("%B %d, %Y")
+        self.LocalDate = date.today().strftime("%B %d, %Y")
+
+    def UpdateTime(self):
+        self.LocalTime = (f"{time.strftime('%H')}:{time.strftime('%M')}")
 
     def SaveNotes(self):
         file = open('AssistantSettings/TodoNotes.json','w',encoding='utf-8')
@@ -271,33 +304,32 @@ class TodoManager(ArtyomAssistant):
         if platform.system() == 'Windows':
             ToastNotifier().show_toast(title=title,msg=message,duration=5)
 
-    def CreateNote(self,text:str,date:str = date.today().strftime("%B %d, %Y"),local_time:str = (f"{time.strftime('%H')}:{time.strftime('%M')}")):
+    def CreateNote(self,text:str,date:str = date.today().strftime("%B %d, %Y"),time:str = (f"{time.strftime('%H')}:{time.strftime('%M')}")):
         self.UpdateNotes()
         # print(self.TodoNotes)
         if date in self.TodoNotes["notes"]:
-            if local_time in self.TodoNotes["notes"][date]:
-                if not text in self.TodoNotes["notes"][date][local_time]:
-                    self.TodoNotes["notes"][date][local_time].append(text)
+            if time in self.TodoNotes["notes"][date]:
+                if not text in self.TodoNotes["notes"][date][time]:
+                    self.TodoNotes["notes"][date][time].append(text)
                     print(self.TodoNotes)
+            else:
+                self.TodoNotes["notes"][date].update({time:[text]})
         else:
-            self.TodoNotes.update(
+            self.TodoNotes["notes"].update(
                 {
-                    "notes":{
                             date:{
-                                    local_time:[text]
+                                    time:[text]
                                 }
-                            }
                 }
             )
         self.SaveNotes()
-        print(self.TodoNotes)
 
-    def RemoveNote(self,text:str,date:str = date.today().strftime("%B %d, %Y"),local_time:str = (f"{time.strftime('%H')}:{time.strftime('%M')}")):
+    def RemoveNote(self,text:str,date:str = date.today().strftime("%B %d, %Y"),time:str = (f"{time.strftime('%H')}:{time.strftime('%M')}")):
         self.UpdateNotes()
         if date in self.TodoNotes["notes"]:
-            if local_time in self.TodoNotes["notes"][date]:
-                if text in self.TodoNotes["notes"][date][local_time]:
-                    self.TodoNotes["notes"][date][local_time].remove(text)
+            if time in self.TodoNotes["notes"][date]:
+                if text in self.TodoNotes["notes"][date][time]:
+                    self.TodoNotes["notes"][date][time].remove(text)
                     print("Hello")
                     self.SaveNotes()
         # else:
@@ -308,26 +340,24 @@ class TodoManager(ArtyomAssistant):
         self.UpdateNotes()
         while True:
             self.UpdateDate()
-            local_time = f"{time.strftime('%H')}:{time.strftime('%M')}"
-            if self.DefaultDate in self.TodoNotes["notes"]:
-                if local_time in self.TodoNotes["notes"][self.DefaultDate]:
-                    for note in self.TodoNotes["notes"][self.DefaultDate][local_time]:
-                        print(note)
+            self.UpdateTime()
+            if self.LocalDate in self.TodoNotes["notes"]:
+                if self.LocalTime in self.TodoNotes["notes"][self.LocalDate]:
+                    for note in self.TodoNotes["notes"][self.LocalDate][self.LocalTime]:
                         self.Notification("Заметка",note)
-                        if len(self.TodoNotes["notes"][self.DefaultDate][local_time]) >= 2:
-                            self.TodoNotes["notes"][self.DefaultDate][local_time].remove(note)
+                        if len(self.TodoNotes["notes"][self.LocalDate][self.LocalTime]) >= 2:
+                            self.TodoNotes["notes"][self.LocalDate][self.LocalTime].remove(note)
                             self.SaveNotes()
-                        elif len(self.TodoNotes["notes"][self.DefaultDate][local_time]) == 1:
-                            self.TodoNotes["notes"][self.DefaultDate].pop(local_time)
+                        elif len(self.TodoNotes["notes"][self.LocalDate][self.LocalTime]) == 1:
+                            self.TodoNotes["notes"][self.LocalDate].pop(self.LocalTime)
                             self.SaveNotes()
 
 
 
 if __name__ == '__main__':
-    todo_manager = TodoManager()
-    todo_manager.CreateNote("123456789",date = todo_manager.DefaultDate,local_time = "22:11")
-    todo_manager.CreateNote("Hello,BRO :)",date = todo_manager.DefaultDate,local_time = "22:12")
-    # todo_manager.RemoveNote("123456789",date = todo_manager.DefaultDate,local_time = "11:51")
-    todo_manager.CheckNote()
-    # Artyom = ArtyomAssistant()
-    # Artyom.Start()
+    # todo_manager = TodoManager()
+    # todo_manager.CreateNote("123456789",date = todo_manager.DefaultDate,self.LocalTime = "23:31")
+    # todo_manager.CreateNote("Hello,BRO :)",date = todo_manager.DefaultDate,self.LocalTime = "23:32")
+    # todo_manager.CheckNote()
+    Artyom = ArtyomAssistant()
+    Artyom.Start()

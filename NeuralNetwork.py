@@ -52,7 +52,7 @@ class NeuralNetwork:
         self.LossArray = []
         self.Loss = 0
         self.LocalLoss = 0.5
-        self.PathLossGraph = os.path.join(ProjectDir,'Graphics','Loss.png')
+        self.PathLossGraph = os.path.join(ProjectDir,'Plots','NeuralNetwork_Loss.png')
         self.Accuracy = 0
 
     # Функция для генерации весов нейросети
@@ -167,7 +167,7 @@ class NeuralNetwork:
 
     # Функция для вызова нейросети
     def predict(self,Input):
-        PredictedArray = self.softmax(self.FeedForward(Input))
+        PredictedArray = self.FeedForward(Input)
         PredictedValue = np.argmax(self.FeedForward(PredictedArray))
         if float(PredictedArray[PredictedValue]) >= MinimumThreshold:
             print(self.CATEGORIES_TARGET[str(PredictedValue)])
@@ -185,7 +185,8 @@ class NeuralNetwork:
             if Output == Target:
                 correct += 1
         accuracy = correct / len(TrainInput)
-        print(accuracy)
+        # print(accuracy)
+        return accuracy
     
     # Сохранение весов и смещений нейросети
     def save(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant.npz')):

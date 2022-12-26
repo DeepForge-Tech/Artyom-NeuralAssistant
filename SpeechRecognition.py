@@ -21,7 +21,7 @@ BATCH_SIZE = 64
 
 class SpeechRecognition:
     def __init__(self):
-        self.INPUT_DIM = 20
+        self.INPUT_DIM = 64
         self.HIDDEN_DIM = 128
         self.OUTPUT_DIM = 256
         self.GenerateWeights()
@@ -34,7 +34,7 @@ class SpeechRecognition:
 
     # Функция для генерации весов нейросети
     def GenerateWeights(self):
-        try:
+        # try:
             self.w1 = np.random.rand(self.INPUT_DIM, self.HIDDEN_DIM)
             self.b1 = np.random.rand(1, self.HIDDEN_DIM)
             self.w2 = np.random.rand(self.HIDDEN_DIM, self.OUTPUT_DIM)
@@ -43,8 +43,8 @@ class SpeechRecognition:
             self.b1 = (self.b1 - 0.5) * 2 * np.sqrt(1/self.INPUT_DIM)
             self.w2 = (self.w2 - 0.5) * 2 * np.sqrt(1/self.HIDDEN_DIM)
             self.b2 = (self.b2 - 0.5) * 2 * np.sqrt(1/self.HIDDEN_DIM)
-        except Exception as Error:
-            logger.error(f"Exception error: {Error}.")
+        # except Exception as Error:
+        #     logger.error(f"Exception error: {Error}.")
 
     # Функция активации
     def relu(self,t):
@@ -138,8 +138,12 @@ class SpeechRecognition:
         logger.info("Neural network was started of training.")
         # Генераци весов нейросети по длине входного массива(датасета)
         self.INPUT_DIM = len(TrainInput[0])
+        print(self.INPUT_DIM)
         self.OUTPUT_DIM = TrainTarget.size
+        # self.OUTPUT_DIM = len(TrainTarget.tolist()[0])
+        print(self.OUTPUT_DIM)
         self.GenerateWeights()
+        self.BestModel = False
         # Прохождение по датасету циклом for
         for epoch in track(range(EPOCHS), description='[green]Training model'):
             for TrainInput,TrainTarget in zip(self.batch(TrainInput,BATCH_SIZE),self.batch(TrainTarget,BATCH_SIZE)):
@@ -153,10 +157,14 @@ class SpeechRecognition:
                 if self.Loss <= self.LocalLoss:
                     self.LocalLoss = self.Loss
                     self.save()
+                    self.BestModel = True
                 # Добавление ошибки в массив для дальнейшего вывода графика ошибки нейросети
                 self.LossArray.append(self.Loss)
         # Вывод графика ошибки нейросети
         plt.plot(self.LossArray)
+        if self.BestModel == True:
+            print("BestModel")
+        print(self.Loss)
         # plt.show() 
         # Сохранение картинки с графиком
         plt.savefig(self.PathLossGraph)
@@ -215,10 +223,11 @@ class SpeechRecognition:
 
     def load(self,PathParametrs = os.path.join(ProjectDir,'Models','SpeechRecognition.npz')):
         ParametrsFile = np.load(PathParametrs)
+        self.GenerateWeights()
         self.w1 = ParametrsFile['arr_0']
-        self.w2 = ParametrsFile['arr_1']
-        self.b1 = ParametrsFile['arr_2']
-        self.b2 = ParametrsFile['arr_3']
+        # self.w2 = ParametrsFile['arr_1']
+        # self.b1 = ParametrsFile['arr_2']
+        # self.b2 = ParametrsFile['arr_3']
         logger.info("Weights of neural network was loaded.")
 
     def save(self,PathParametrs = os.path.join(ProjectDir,'Models','SpeechRecognition.npz')):
@@ -227,8 +236,8 @@ class SpeechRecognition:
 if __name__ == '__main__':
     TrainInput,TrainTarget = PreprocessingDataset().PreprocessingAudio(PathAudio=AudioDatasetDir,mode='train')
     speech_recognition = SpeechRecognition()
-    speech_recognition.train(TrainInput,TrainTarget)
-    # speech_recognition.load()
+    # speech_recognition.train(TrainInput,TrainTarget)
+    speech_recognition.load()
     speech_recognition.predict(TrainInput[23])
     speech_recognition.predict(TrainInput[23])
     # speech_recognition.score(TrainInput,TrainTarget)
