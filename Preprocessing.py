@@ -4,29 +4,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import os
 import json
 import random
-import librosa
-import librosa.display
+# import librosa
+# import librosa.display
 from sklearn.preprocessing import LabelEncoder,OneHotEncoder
 from rich.progress import track
 
 # Подготовка датасета
 ProjectDir = os.getcwd()
-if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
-    file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
-    DataFile = json.load(file)
-    dataset = DataFile['dataset']
-    file.close()
-else:
-    raise RuntimeError
 
-if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
-    file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
-    DataFile = json.load(file)
-    CATEGORIES = DataFile['CATEGORIES']
-    CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
-    file.close()
-else:
-    raise RuntimeError
 
 
 class PreprocessingDataset:
@@ -48,64 +33,80 @@ class PreprocessingDataset:
     def ToNumpyArray(self,array):
         return np.array(array)
 
-    def PreprocessingAudio(self,PathAudio:str,mode:str = 'train'):
-        self.Mode = mode
-        self.PathAudio = PathAudio
-        if self.Mode == 'train' or self.Mode == 'test':
-            self.DatasetFiles = list(os.walk(self.PathAudio))
-            for (root,dirs,files) in track(os.walk(self.PathAudio,topdown=True),description='[green]Preprocessing'):
-                for file in files[:2]:
-                    if file.endswith('.wav'):
-                        self.AudioFile = os.path.join(root,file)
-                        audio,sample_rate = librosa.load(self.AudioFile,res_type='kaiser_fast')
-                        mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=64)
-                        mfccs = np.mean(mfccs.T,axis=0)
-                        self.x.append(mfccs)
-                    elif file.endswith('.txt'):
-                        file = open(os.path.join(root,file),'r+',encoding="utf-8")
-                        DataFile = file.read()
-                        self.y.append(DataFile)
-                        file.close()
-                # print (root)
-                # print("\n" + "\n" + "\n")
-                # print (dirs)
-                # print("\n" + "\n" + "\n")
-                # print (files)
-                # print("\n" + "\n" + "\n")
-                # print ('--------------------------------')
-            InputDatasetFile = open("Datasets/SpeechInputDataset.json", "w", encoding ='utf-8')
-            json.dump(self.y, InputDatasetFile,ensure_ascii=False,sort_keys=True, indent=2)
-            InputDatasetFile.close()
-            labelencoder=OneHotEncoder()
-            labelencoder = labelencoder.fit_transform(np.array(self.y).reshape(-1,1))
-            VectorizedData = np.array(labelencoder.toarray(),dtype='int')
-            # vectorizer = OneHotEncoder()
-            # vectorizer = vectorizer.fit_transform(np.array(self.y).reshape(-1,1))
-            # VectorizedData = vectorizer.toarray()
-            self.TrainTarget = VectorizedData
-            self.TrainInput = self.ToMatrix(self.x)
-            print(self.TrainTarget)
-            return self.TrainInput,self.TrainTarget
+    # def PreprocessingAudio(self,PathAudio:str,mode:str = 'train'):
+    #     self.Mode = mode
+    #     self.PathAudio = PathAudio
+    #     if self.Mode == 'train' or self.Mode == 'test':
+    #         self.DatasetFiles = list(os.walk(self.PathAudio))
+    #         for (root,dirs,files) in track(os.walk(self.PathAudio,topdown=True),description='[green]Preprocessing'):
+    #             for file in files[:2]:
+    #                 if file.endswith('.wav'):
+    #                     self.AudioFile = os.path.join(root,file)
+    #                     audio,sample_rate = librosa.load(self.AudioFile,res_type='kaiser_fast')
+    #                     mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=64)
+    #                     mfccs = np.mean(mfccs.T,axis=0)
+    #                     self.x.append(mfccs)
+    #                 elif file.endswith('.txt'):
+    #                     file = open(os.path.join(root,file),'r+',encoding="utf-8")
+    #                     DataFile = file.read()
+    #                     self.y.append(DataFile)
+    #                     file.close()
+    #             # print (root)
+    #             # print("\n" + "\n" + "\n")
+    #             # print (dirs)
+    #             # print("\n" + "\n" + "\n")
+    #             # print (files)
+    #             # print("\n" + "\n" + "\n")
+    #             # print ('--------------------------------')
+    #         InputDatasetFile = open("Datasets/SpeechInputDataset.json", "w", encoding ='utf-8')
+    #         json.dump(self.y, InputDatasetFile,ensure_ascii=False,sort_keys=True, indent=2)
+    #         InputDatasetFile.close()
+    #         labelencoder=OneHotEncoder()
+    #         labelencoder = labelencoder.fit_transform(np.array(self.y).reshape(-1,1))
+    #         VectorizedData = np.array(labelencoder.toarray(),dtype='int')
+    #         # vectorizer = OneHotEncoder()
+    #         # vectorizer = vectorizer.fit_transform(np.array(self.y).reshape(-1,1))
+    #         # VectorizedData = vectorizer.toarray()
+    #         self.TrainTarget = VectorizedData
+    #         self.TrainInput = self.ToMatrix(self.x)
+    #         print(self.TrainTarget)
+    #         return self.TrainInput,self.TrainTarget
             
-        elif self.Mode == 'predict':
-            InputDatasetFile = open("Datasets/SpeechInputDataset.json", "r", encoding ='utf8')
-            DataFile = json.load(InputDatasetFile)
-            InputDatasetFile.close()
+    #     elif self.Mode == 'predict':
+    #         InputDatasetFile = open("Datasets/SpeechInputDataset.json", "r", encoding ='utf8')
+    #         DataFile = json.load(InputDatasetFile)
+    #         InputDatasetFile.close()
             
-            self.AudioFile = self.PathAudio
-            audio,sample_rate = librosa.load(self.AudioFile,res_type='kaiser_fast')
-            mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=64)
-            mfccs = np.mean(mfccs.T,axis=0)
-            labelencoder=LabelEncoder()
-            labelencoder = labelencoder.fit_transform(DataFile)
-            VectorizedData = labelencoder.transform(mfccs)
-            # vectorizer = OneHotEncoder()
-            # vectorizer.fit_transform(DataFile)
-            # VectorizedData = vectorizer.transform(mfccs).toarray()
-            self.PredictInput = self.ToMatrix(VectorizedData)
-            return self.PredictInput
+    #         self.AudioFile = self.PathAudio
+    #         audio,sample_rate = librosa.load(self.AudioFile,res_type='kaiser_fast')
+    #         mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=64)
+    #         mfccs = np.mean(mfccs.T,axis=0)
+    #         labelencoder=LabelEncoder()
+    #         labelencoder = labelencoder.fit_transform(DataFile)
+    #         VectorizedData = labelencoder.transform(mfccs)
+    #         # vectorizer = OneHotEncoder()
+    #         # vectorizer.fit_transform(DataFile)
+    #         # VectorizedData = vectorizer.transform(mfccs).toarray()
+    #         self.PredictInput = self.ToMatrix(VectorizedData)
+    #         return self.PredictInput
 
     def PreprocessingText(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
+        if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
+            file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
+            DataFile = json.load(file)
+            dataset = DataFile['dataset']
+            file.close()
+        else:
+            raise RuntimeError
+
+        if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
+            file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
+            DataFile = json.load(file)
+            CATEGORIES = DataFile['CATEGORIES']
+            CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
+            file.close()
+        else:
+            raise RuntimeError
         self.Mode = mode
         if self.Mode == 'train' or self.Mode == 'test':
             self.Dictionary = list(Dictionary.items())
@@ -121,6 +122,8 @@ class PreprocessingDataset:
             elif self.Mode == 'test':
                 for target in self.y:
                     self.TestTarget.append(CATEGORIES[target])
+            print(self.x)
+            print(self.y)
             vectorizer = TfidfVectorizer()
             vectorizer = vectorizer.fit_transform(self.x)
             VectorizedData = vectorizer.toarray()

@@ -14,29 +14,29 @@ np.random.seed(0)
 ProjectDir = os.getcwd()
 logger.add(os.path.join(ProjectDir,'Logs/Transformer_NeuralNetwork.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
 
-# # Подготовка датасета
-# if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
-#     file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
-#     Preprocessing = PreprocessingDataset()
-#     DataFile = json.load(file)
-#     dataset = DataFile['dataset']
-#     TrainInput,TrainTarget = Preprocessing.PreprocessingText(Dictionary = dataset,mode = 'train')
-#     file.close()
-# else:
-#     raise RuntimeError
+# Подготовка датасета
+if os.path.exists(os.path.join(ProjectDir,'Datasets/TransformerDataset.json')):
+    file = open('Datasets/TransformerDataset.json','r',encoding='utf-8')
+    Preprocessing = PreprocessingDataset()
+    DataFile = json.load(file)
+    dataset = DataFile['dataset']
+    TrainInput,TrainTarget = Preprocessing.PreprocessingTransformer(Dictionary = dataset,mode = 'train')
+    file.close()
+else:
+    raise RuntimeError
 
-# if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
-#     file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
-#     DataFile = json.load(file)
-#     CATEGORIES = DataFile['CATEGORIES']
-#     CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
-#     file.close()
-# else:
-#     raise RuntimeError
+if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/TransformerSettings.json')):
+    file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/TransformerSettings.json'),'r',encoding='utf-8')
+    DataFile = json.load(file)
+    # CATEGORIES = DataFile['CATEGORIES']
+    CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
+    file.close()
+else:
+    raise RuntimeError
 
 
 learning_rate = 0.001
-EPOCHS = 100000
+EPOCHS = 50000
 BATCH_SIZE = 50
 MinimumThreshold = 0.6
 
@@ -45,7 +45,7 @@ class Transformer_NeuralNetwork:
     def __init__(self,CATEGORIES:dict = {},CATEGORIES_TARGET:list = []):
         self.CATEGORIES = CATEGORIES
         self.CATEGORIES_TARGET = CATEGORIES_TARGET
-        self.INPUT_DIM = 64
+        self.INPUT_DIM = 60
         self.HIDDEN_DIM = 512
         self.OUTPUT_DIM = len(CATEGORIES_TARGET)
         self.GenerateWeights()
@@ -138,7 +138,8 @@ class Transformer_NeuralNetwork:
     def train(self,TrainInput,TrainTarget):
         logger.info("Neural network was started of training.")
         # Генераци весов нейросети по длине входного массива(датасета)
-        self.INPUT_DIM = len(TrainInput[0])
+        # self.INPUT_DIM = len(TrainInput[0])
+        print(self.INPUT_DIM)
         self.GenerateWeights()
         # Прохождение по датасету циклом for
         for epoch in track(range(EPOCHS), description='[green]Training Transformer Model'):
@@ -159,6 +160,7 @@ class Transformer_NeuralNetwork:
         # plt.show() 
         # Сохранение картинки с графиком
         plt.savefig(self.PathLossGraph)
+        print(f"Loss: {self.Loss}")
         # Вызов функции проверки нейросети с последующим выводом количества правильных ответов в виде процентов
         self.Accuracy = self.score(TrainInput,TrainTarget)
         logger.info("Neural network was trained on the dataset.")
@@ -167,14 +169,18 @@ class Transformer_NeuralNetwork:
 
     # Функция для вызова нейросети
     def predict(self,Input):
-        PredictedArray = self.FeedForward(Input)
-        PredictedValue = np.argmax(self.FeedForward(PredictedArray))
-        if float(PredictedArray[PredictedValue]) >= MinimumThreshold:
+            print(Input)
+            PredictedArray = self.FeedForward(Input[0])
+            print(PredictedArray)
+            PredictedValue = np.argmax(self.FeedForward(PredictedArray))
+            print(PredictedValue)
             print(self.CATEGORIES_TARGET[str(PredictedValue)])
-            return self.CATEGORIES_TARGET[str(PredictedValue)]
-        else:
-            # Если нейросеть не уверенна в своём ответе,то отправляется ответ в виде фразы 
-            return "don't_know"
+            # if float(PredictedArray[PredictedValue]) >= MinimumThreshold:
+            #     print(self.CATEGORIES_TARGET[str(PredictedValue)])
+            #     return self.CATEGORIES_TARGET[str(PredictedValue)]
+            # else:
+            #     # Если нейросеть не уверенна в своём ответе,то отправляется ответ в виде фразы 
+            #     return "don't_know"
     
     # Функция проверки нейросети с последующим выводом количества правильных ответов в виде процентов
     def score(self,TrainInput,TrainTarget):
@@ -202,6 +208,6 @@ class Transformer_NeuralNetwork:
         logger.info("Weights of neural network was loaded.")
 
 if __name__ == "__main__":
-    network = Transformer_NeuralNetwork()
-    # network.train(TrainInput,TrainTarget)
-    # network.predict()
+    network = Transformer_NeuralNetwork(CATEGORIES_TARGET=CATEGORIES_TARGET)
+    network.train(TrainInput,TrainTarget)
+    network.predict(Preprocessing.PreprocessingTransformer(PredictArray = ["поставь будильник на одиннадцать тридцать"],mode = 'predict'))

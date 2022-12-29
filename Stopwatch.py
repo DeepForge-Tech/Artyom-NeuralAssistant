@@ -21,15 +21,18 @@ class Stopwatch:
             self.TimeUnpaused = False
             self.LocalTime = 0
 
-        while True:
-            if self.TimeStopped == True:
-                break
-            elif self.TimePaused:
-                continue
-            else:
-                self.LocalTime += 1
-                time.sleep(1)
-                print(self.LocalTime)
+            while True:
+                if self.TimeStopped == True:
+                    break
+                elif self.TimePaused:
+                    continue
+                else:
+                    self.LocalTime += 1
+                    time.sleep(1)
+                    print(self.LocalTime)
+            return True
+        else:
+            return False
 
     def Stop(self):
         if self.TimeStarted == True and self.TimeStopped == False:
@@ -37,6 +40,9 @@ class Stopwatch:
             self.TimeStarted = True
             self.TimeUnpaused = False
             self.TimePaused = False
+            return True
+        else:
+            return False
 
     def Pause(self):
         if self.TimeStarted == True and self.TimeStopped == False and self.TimePaused == False:
@@ -44,6 +50,9 @@ class Stopwatch:
             self.TimeStopped = False
             self.TimeStarted = True
             self.TimeUnpaused = False
+            return True
+        else:
+            return False
     
     def Unpause(self):
         if self.TimeStarted == True and self.TimeStopped == False and self.TimeUnpaused == False and self.TimePaused == True:
@@ -51,13 +60,16 @@ class Stopwatch:
             self.TimeStarted = True
             self.TimeStopped = False
             self.TimeUnpaused = True
+            return True
+        else:
+            return False
 
-if __name__ == "__main__":
-    timer = Stopwatch()
-    timer.Main()
-    time.sleep(5)
-    timer.Pause()
-    time.sleep(2)
-    timer.Unpause()
-    time.sleep(2)
-    timer.Stop()
+# if __name__ == "__main__":
+#     timer = Stopwatch()
+#     timer.Main()
+#     time.sleep(5)
+#     timer.Pause()
+#     time.sleep(2)
+#     timer.Unpause()
+#     time.sleep(2)
+#     timer.Stop()

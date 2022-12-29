@@ -19,11 +19,12 @@ from MusicManager import MusicManager
 import platform
 from loguru import logger
 from datetime import date
-from win10toast import ToastNotifier
 from Alarm import Alarm
 from Timer import Timer
 from Stopwatch import Stopwatch
-
+if platform.system() == 'Windows':
+    from win10toast import ToastNotifier
+from PIL import ImageGrab
 # Инициализация параметров
 ProjectDir = os.path.dirname(os.path.realpath(__file__))
 UserDir = os.path.expanduser('~')
@@ -44,11 +45,16 @@ put_accent = True
 put_yo = True
 device = torch.device('cpu') # cpu или gpu
 MusicManager = MusicManager()
+TransformsFile =  open(os.path.join(ProjectDir,'AssistantSettings/Transforms.json'),'r',encoding='utf-8')
+Transforms = json.load(TransformsFile)
+TransformsFile.close()
 Preprocessing = PreprocessingDataset() 
 network = NeuralNetwork(CATEGORIES,CATEGORIES_TARGET)
 network.load()
 owm = OWM('2221d769ed67828e858caaa3803161ea')
 logger.add(os.path.join(ProjectDir,'Logs/ArtyomAssistant.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
+timer = Timer()
+stopwatch = Stopwatch()
 
 class ArtyomAssistant:
     def __init__(self):
@@ -61,7 +67,8 @@ class ArtyomAssistant:
             'joikes':self.JoikesCommand,'exit':self.ExitCommand,
             'gratitude':self.GratitudeCommand,'vscode':self.VSCodeCommand,
             'todo':self.ToDoCommand,'alarm':self.AlarmCommand,
-            'timer':self.TimerCommand,'stopwatch':self.StopwatchCommand
+            'timer':self.TimerCommand,'stopwatch':self.StopwatchCommand,
+            'screenshot':self.ScreenShotCommand
         }
         self.RecognitionModel = Model('model')
         self.Recognition = KaldiRecognizer(self.RecognitionModel,16000)
@@ -94,6 +101,28 @@ class ArtyomAssistant:
                 if answer['text']:
                     yield answer['text']
     
+    def FilteringTransforms(self,text:str,to_nums:bool = True,to_words:bool = False):
+        if to_nums == True:
+            TransformedText = ""
+            Nums = []
+            LocalText =  text.split()
+            for word in LocalText:
+                if word in Transforms["Words"]:
+                    Nums.append(int(Transforms["Words"][word]))
+                    text = text.replace(word,str(Transforms["Words"][word]))
+            TransformedText = text
+            return TransformedText,Nums
+        elif to_words == True:
+            TransformedText = ""
+            Words = []
+            LocalText = text.split()
+            for number in LocalText:
+                if number in Transforms["Nums"]:
+                    Words.append(Transforms["Nums"][number])
+                    text = text.replace(number,str(Transforms["Nums"][number]))
+            TransformedText = text
+            return TransformedText,Words
+    
     def CommunicationCommand(self):
         self.Tell(random.choice(ANSWERS['communication']))
     
@@ -108,9 +137,11 @@ class ArtyomAssistant:
         self.Tell('Сейчас {} градусов по цельсию'.format(num2words(int(temp), lang='ru')))
     
     def TimeCommand(self):
-        hours = num2words(int(time.strftime('%H')), lang='ru')
-        minutes = num2words(int(time.strftime('%M')), lang='ru')
-        self.Tell(f'Сейчас {hours} {minutes}')
+
+        hours = int(time.strftime('%H'))
+        minutes = int(time.strftime('%M'))
+        time_str = self.FilteringTransforms(f'Сейчас {hours} {minutes}',to_words=True)
+        self.Tell(time_str)
 
     def MusicCommand(self,command):
         if command == 'music':
@@ -199,9 +230,10 @@ class ArtyomAssistant:
     def GratitudeCommand(self):
         self.Tell(random.choice(ANSWERS['gratitude']))
 
-    def ToDoCommand(self,command):
+    def ToDoCommand(self,command,text:None):
         if command == 'todo':
             pass
+
     def VSCodeCommand(self):
         if platform.system() == 'Windows':
             if os.path.exists(os.path.join(UserDir,'/AppData/Local/Programs/Microsoft VS Code/Code.exe')):
@@ -214,12 +246,50 @@ class ArtyomAssistant:
         elif platform.system() == 'Darwin':
             self.Tell("Эта функция пока не доступна")
 
-    def TimerCommand(self,command):
+    def TimerCommand(self,command,text:None):
+        hours = 0
+        minutes = 0
+        seconds = 0
+        TransformedText,Nums = self.FilteringTransforms(text,to_nums = True)
         if command == 'timer':
             timer = Timer()
-            timer.Main()
+            if len(Nums) == 3:
+                hours = Nums[0]
+                minutes = Nums[1]
+                seconds = Nums[2]
+            elif len(Nums) == 2:
+                hours = 0
+                minutes = Nums[0]
+                seconds = Nums[1]
+            elif len(Nums) == 1:
+                hours = 0
+                minutes = 0
+                seconds = Nums[0]
+            timer.Main(hours,minutes,seconds)
+            if timer.TimeStarted == False  and timer.TimeUnpaused == False and timer.TimePaused == False:
+                self.Tell("Таймер запущен")
+            else:
+                self.Tell("Таймер не удалось запустить")
 
-    def StopwatchCommand(self,command):
+        elif command == 'off-timer':
+            Progress = timer.Stop()
+            if Progress == True:
+                self.Tell(random.choice(["Таймер выключен","Выключил"]))
+            elif Progress == False:
+                self.Tell("Таймер не запущен")
+
+        elif command == 'pause-timer':
+            Progress = timer.Pause()
+            if Progress == True:
+                self.Tell(random.choice(["Таймер поставлен на паузу","Таймер остановлен","Остановил"]))
+
+        elif command == 'unpause-timer':
+            Progress = timer.Unpause()
+            if Progress == True:
+                self.Tell(random.choice(["Таймер возобновлён","Отсчёт продолжается","Таймер "]))
+            
+
+    def StopwatchCommand(self,command,text:None):
         stopwatch = Stopwatch()
         if command == 'stopwatch':
             stopwatch.Main()
@@ -230,27 +300,41 @@ class ArtyomAssistant:
         elif command == 'unpause-stopwatch':
             stopwatch.Unpause()
     
-    def CommandManager(self,PredictedValue):
+    def ScreenShotCommand(self):
+        image = ImageGrab()
+        NameImage = "{}-{}.png".format(time.strftime('%H'),time.strftime('%M'))
+        if platform.system() == "Windows":
+            ImagePath = os.path.join(os.path.expanduser('~'),'Pictures','Screenshots')
+            image.save(NameImage, "PNG")
+        elif platform.system() == "Linux":
+            pass
+        elif platform.system() == "Darwin":
+            pass
+
+    def AlarmCommand(self):
+        pass
+
+    def CommandManager(self,PredictedValue,text:None):
         if PredictedValue == "don't_know":
             self.Tell(random.choice(ANSWERS["don't_know"]))
         else:
             operation = CATEGORIES[PredictedValue]
 
-        if operation == 'music' or operation == 'off-music' or operation == 'pause-music' or operation == 'unpause-music':
-            self.MusicCommand(operation)
-        elif operation == 'stopwatch' or operation == 'off-stopwatch' or operation == 'pause-stopwatch' or 'unpause-stopwatch':
-            self.StopwatchCommand(operation)
-        elif operation == 'timer' or operation == 'off-timer' or operation == 'pause-timer' or operation == 'unpause-timer':
-            self.TimerCommand(operation)
-        else:
-            self.Functions[operation]()
+            if operation == 'music' or operation == 'off-music' or operation == 'pause-music' or operation == 'unpause-music':
+                self.MusicCommand(operation,text)
+            elif operation == 'stopwatch' or operation == 'off-stopwatch' or operation == 'pause-stopwatch' or 'unpause-stopwatch':
+                self.StopwatchCommand(operation,text)
+            elif operation == 'timer' or operation == 'off-timer' or operation == 'pause-timer' or operation == 'unpause-timer':
+                self.TimerCommand(operation,text)
+            else:
+                self.Functions[operation]()
 
     def Start(self):
-        Alarm_Class = Alarm()
-        AlarmThread = threading.Thread(target = Alarm_Class.CheckAlarm)
+        self.Alarm_Class = Alarm()
+        AlarmThread = threading.Thread(target = self.Alarm_Class.CheckAlarm)
         AlarmThread.start()
-        ToDo = TodoManager()
-        ToDoThread = threading.Thread(target = ToDo.CheckNote)
+        self.ToDo = TodoManager()
+        ToDoThread = threading.Thread(target = self.ToDo.CheckNote)
         ToDoThread.start()
         for text in self.SpeechRecognition():
             print(text)
@@ -261,7 +345,7 @@ class ArtyomAssistant:
                     Input = [text]
                     Input = Preprocessing.PreprocessingText(PredictArray = Input,mode = 'predict')
                     PredictedValue = network.predict(Input)
-                    self.CommandManager(PredictedValue)
+                    self.CommandManager(PredictedValue,text)
                     break
                 elif name.lower() in text and len(text.split()) == 1:
                     self.Tell('Чем могу помочь?')
