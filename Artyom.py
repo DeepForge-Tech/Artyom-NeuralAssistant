@@ -25,6 +25,7 @@ from Stopwatch import Stopwatch
 if platform.system() == 'Windows':
     from win10toast import ToastNotifier
 from PIL import ImageGrab
+
 # Инициализация параметров
 ProjectDir = os.path.dirname(os.path.realpath(__file__))
 UserDir = os.path.expanduser('~')

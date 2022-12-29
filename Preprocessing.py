@@ -122,8 +122,6 @@ class PreprocessingDataset:
             elif self.Mode == 'test':
                 for target in self.y:
                     self.TestTarget.append(CATEGORIES[target])
-            print(self.x)
-            print(self.y)
             vectorizer = TfidfVectorizer()
             vectorizer = vectorizer.fit_transform(self.x)
             VectorizedData = vectorizer.toarray()
