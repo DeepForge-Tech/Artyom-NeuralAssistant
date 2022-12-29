@@ -11,8 +11,22 @@ from rich.progress import track
 
 # Подготовка датасета
 ProjectDir = os.getcwd()
+if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
+    file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
+    DataFile = json.load(file)
+    dataset = DataFile['dataset']
+    file.close()
+else:
+    raise RuntimeError
 
-
+if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
+    file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
+    DataFile = json.load(file)
+    CATEGORIES = DataFile['CATEGORIES']
+    CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
+    file.close()
+else:
+    raise RuntimeError
 
 class PreprocessingDataset:
     def __init__(self):
@@ -91,28 +105,12 @@ class PreprocessingDataset:
     #         return self.PredictInput
 
     def PreprocessingText(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
-        if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
-            file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
-            DataFile = json.load(file)
-            dataset = DataFile['dataset']
-            file.close()
-        else:
-            raise RuntimeError
-
-        if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
-            file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
-            DataFile = json.load(file)
-            CATEGORIES = DataFile['CATEGORIES']
-            CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
-            file.close()
-        else:
-            raise RuntimeError
         self.Mode = mode
         if self.Mode == 'train' or self.Mode == 'test':
             self.Dictionary = list(Dictionary.items())
             random.shuffle(self.Dictionary)
             self.Dictionary = dict(self.Dictionary)
-            for intent in track(self.Dictionary,description='[green]Preprocessing'):
+            for intent in self.Dictionary:
                 for questions in Dictionary[intent]['questions']:
                     self.x.append(questions)
                     self.y.append(intent)
@@ -129,7 +127,7 @@ class PreprocessingDataset:
             json.dump(self.x, InputDatasetFile,ensure_ascii=False,sort_keys=True, indent=2)
             InputDatasetFile.close()
             if self.Mode == 'train':
-                self.TrainInput = self.ToMatrix(VectorizedData)
+                self.TrainInput = np.squeeze(VectorizedData)
                 return self.TrainInput,self.TrainTarget
             elif self.Mode == 'test':
                 self.TestInput = VectorizedData
@@ -142,7 +140,7 @@ class PreprocessingDataset:
             InputDatasetFile.close()
             vectorizer = TfidfVectorizer()
             vectorizer.fit_transform(DataFile)
-            self.PredictInput = self.ToMatrix(vectorizer.transform(self.PredictArray).toarray())
+            self.PredictInput = np.squeeze(vectorizer.transform(self.PredictArray).toarray())
             return self.PredictInput
 
 # TrainInput,TrainTarget = PreprocessingDataset().PreprocessingAudio(PathAudio="C:/Users/Blackflame576/Documents/Blackflame576/DigitalBit/Artyom-NeuralAssistant/Datasets/SpeechDataset/")

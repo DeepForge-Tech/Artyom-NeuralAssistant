@@ -12,31 +12,31 @@ plt.style.use("cyberpunk")
 np.random.seed(0)
 
 ProjectDir = os.getcwd()
-logger.add(os.path.join(ProjectDir,'Logs/NeuralNetwork.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
+logger.add(os.path.join(ProjectDir,'Logs/DownloadYoutubeBot.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
 
-# Подготовка датасета
-if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
-    file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
-    Preprocessing = PreprocessingDataset()
-    DataFile = json.load(file)
-    dataset = DataFile['dataset']
-    TrainInput,TrainTarget = Preprocessing.PreprocessingText(Dictionary = dataset,mode = 'train')
-    file.close()
-else:
-    raise RuntimeError
+# # Подготовка датасета
+# if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
+#     file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
+#     Preprocessing = PreprocessingDataset()
+#     DataFile = json.load(file)
+#     dataset = DataFile['dataset']
+#     TrainInput,TrainTarget = Preprocessing.Start(Dictionary = dataset,mode = 'train')
+#     file.close()
+# else:
+#     raise RuntimeError
 
-if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
-    file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
-    DataFile = json.load(file)
-    CATEGORIES = DataFile['CATEGORIES']
-    CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
-    file.close()
-else:
-    raise RuntimeError
+# if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
+#     file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
+#     DataFile = json.load(file)
+#     CATEGORIES = DataFile['CATEGORIES']
+#     CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
+#     file.close()
+# else:
+#     raise RuntimeError
 
 
 learning_rate = 0.001
-EPOCHS = 100000
+EPOCHS = 55000
 BATCH_SIZE = 50
 MinimumThreshold = 0.6
 
@@ -52,7 +52,7 @@ class NeuralNetwork:
         self.LossArray = []
         self.Loss = 0
         self.LocalLoss = 0.5
-        self.PathLossGraph = os.path.join(ProjectDir,'Plots','NeuralNetwork_Loss.png')
+        self.PathLossGraph = os.path.join(ProjectDir,'Plots','Loss.png')
         self.Accuracy = 0
 
     # Функция для генерации весов нейросети
@@ -138,8 +138,7 @@ class NeuralNetwork:
     def train(self,TrainInput,TrainTarget):
         logger.info("Neural network was started of training.")
         # Генераци весов нейросети по длине входного массива(датасета)
-        self.INPUT_DIM = len(TrainInput)
-        print(self.INPUT_DIM)
+        self.INPUT_DIM = len(TrainInput[0])
         self.GenerateWeights()
         # Прохождение по датасету циклом for
         for epoch in track(range(EPOCHS), description='[green]Training model'):
@@ -186,8 +185,7 @@ class NeuralNetwork:
             if Output == Target:
                 correct += 1
         accuracy = correct / len(TrainInput)
-        # print(accuracy)
-        return accuracy
+        print(accuracy)
     
     # Сохранение весов и смещений нейросети
     def save(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant.npz')):
@@ -200,14 +198,13 @@ class NeuralNetwork:
         self.w2 = ParametrsFile['arr_1']
         self.b1 = ParametrsFile['arr_2']
         self.b2 = ParametrsFile['arr_3']
-        print(len(self.w1))
         logger.info("Weights of neural network was loaded.")
 
-if __name__ == '__main__':
-    # Вызов класса нейросети
-    network = NeuralNetwork(CATEGORIES,CATEGORIES_TARGET)
-    # Вызов функции тренировки нейросети
-    network.train(TrainInput,TrainTarget)
-    network.load()
-    # Функция для вызова нейросети
-    network.predict(Preprocessing.PreprocessingText(PredictArray = ['скажи время'],mode = 'predict'))
+# if __name__ == '__main__':
+#     # Вызов класса нейросети
+#     network = NeuralNetwork(CATEGORIES,CATEGORIES_TARGET)
+#     # Вызов функции тренировки нейросети
+#     network.train(TrainInput,TrainTarget)
+#     # network.load()
+#     # Функция для вызова нейросети
+#     network.predict(Preprocessing.Start(PredictArray = ['скажи время'],mode = 'predict'))
