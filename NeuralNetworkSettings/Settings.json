@@ -36,7 +36,9 @@
         "mail":33,
         "date":34,
         "how_are_you":35,
-        "what_you_do":36
+        "what_you_do":36,
+        "next-music":37,
+        "previous-music":38
     },
     "CATEGORIES_TARGET":{
         "0":"communication",
@@ -75,7 +77,9 @@
         "33":"mail",
         "34":"date",
         "35":"how_are_you",
-        "36":"what_you_do"
+        "36":"what_you_do",
+        "37":"next-music",
+        "38":"previous-music"
     },
     "learning_rate":0.001,
     "EPOCHS":100000,
