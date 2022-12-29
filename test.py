@@ -940,25 +940,3 @@
 # #     print(test["notes"]["03/12/22"])
 # # else:
 # #     test.update({"notes":{"03/12/22":[1]}})
-import os
-import json
-import time
-ProjectDir = os.path.dirname(os.path.realpath(__file__))
-TransformsFile =  open(os.path.join(ProjectDir,'AssistantSettings/Transforms.json'),'r',encoding='utf-8')
-Transforms = json.load(TransformsFile)
-TransformsFile.close()
-hours = int(time.strftime('%H'))
-minutes = int(time.strftime('%M'))
-text = f'Сейчас {hours} {minutes}'
-TransformedText = ""
-Words = []
-LocalText = text.split()
-print(LocalText)
-for number in LocalText:
-    if number in Transforms["Nums"]:
-        print(1)
-        Words.append(Transforms["Nums"][number])
-        text = text.replace(number,str(Transforms["Nums"][number]))
-hours = int(time.strftime('%H'))
-minutes = int(time.strftime('%M'))
-print(text)

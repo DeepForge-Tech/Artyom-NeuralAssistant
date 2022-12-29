@@ -27,14 +27,10 @@ numpy==1.21.6
 omegaconf==2.2.3
 packaging==21.3
 Pillow==9.2.0
-PyAudio==0.2.12
 pycparser==2.21
 Pygments==2.13.0
 pyowm==3.3.0
 pyparsing==3.0.9
-PyQt6==6.4.0
-PyQt6-Qt6==6.4.1
-PyQt6-sip==13.4.0
 PySocks==1.7.1
 python-dateutil==2.8.2
 PyYAML==6.0
