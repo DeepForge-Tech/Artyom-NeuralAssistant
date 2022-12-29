@@ -4,8 +4,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import os
 import json
 import random
-import librosa
-import librosa.display
+#import librosa
+#import librosa.display
 from sklearn.preprocessing import LabelEncoder,OneHotEncoder
 from rich.progress import track
 
