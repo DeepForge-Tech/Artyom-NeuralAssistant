@@ -6,7 +6,11 @@ from Preprocessing import PreprocessingDataset
 from rich.progress import track
 import mplcyberpunk
 from loguru import logger
-from sklearn.preprocessing import LabelEncoder,OneHotEncoder
+from sklearn.preprocessing import LabelEncoder
+import platform
+hostname = (platform.uname()[1]).lower()
+if hostname.startswith("rpi"):
+    from LED_RPI import LED_Green,LED_Red,LED_Yellow,Clean
 
 plt.style.use("cyberpunk")
 np.random.seed(0)
@@ -15,25 +19,27 @@ ProjectDir = os.getcwd()
 AudioDatasetDir = os.path.join(ProjectDir,"Datasets/SpeechDataset/")
 logger.add(os.path.join(ProjectDir,'Logs/SpeechNeuralNetwork.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
 
-learning_rate = 0.0002
-EPOCHS = 2000
+learning_rate = 0.000002
+EPOCHS = 200000
 BATCH_SIZE = 64
 
 class SpeechRecognition:
     def __init__(self):
-        self.INPUT_DIM = 64
+        self.INPUT_DIM = 20
         self.HIDDEN_DIM = 128
         self.OUTPUT_DIM = 256
         self.GenerateWeights()
         self.LossArray = []
         self.Loss = 0
         self.LocalLoss = 0.5
-        self.PathLossGraph = os.path.join(ProjectDir,'Graphics','Loss.png')
+        self.PathLossGraph = os.path.join(ProjectDir,'Plots','Loss.png')
         self.Accuracy = 0
         self.LastOutputLayer = 0
 
     # Функция для генерации весов нейросети
     def GenerateWeights(self):
+        if hostname.startswith("rpi"):
+            LED_Red()
         # try:
             self.w1 = np.random.rand(self.INPUT_DIM, self.HIDDEN_DIM)
             self.b1 = np.random.rand(1, self.HIDDEN_DIM)
@@ -135,11 +141,13 @@ class SpeechRecognition:
         #     logger.error(f"Exception error: {Error}.")
 
     def train(self,TrainInput,TrainTarget):
+        if hostname.startswith("rpi"):
+            LED_Yellow()
         logger.info("Neural network was started of training.")
         # Генераци весов нейросети по длине входного массива(датасета)
         self.INPUT_DIM = len(TrainInput[0])
         print(self.INPUT_DIM)
-        self.OUTPUT_DIM = TrainTarget.size
+        # self.OUTPUT_DIM = TrainTarget.size
         # self.OUTPUT_DIM = len(TrainTarget.tolist()[0])
         print(self.OUTPUT_DIM)
         self.GenerateWeights()
@@ -173,17 +181,19 @@ class SpeechRecognition:
         logger.info("Neural network was trained on the dataset.")
         # logger.info(f"Accuracy: {self.Accuracy}")
         logger.info(f"Loss graph was saved at the path: {self.PathLossGraph}")
+        if hostname.startswith("rpi"):
+            LED_Green()
 
     def predict(self,Input):
-        PredictedArray = np.array(self.FeedForward(Input)).astype(int)
+        PredictedArray = np.argmax(self.FeedForward(Input))
         print(PredictedArray)
         InputDatasetFile = open("Datasets/SpeechInputDataset.json", "r", encoding ='utf8')
         DataFile = json.load(InputDatasetFile)
         InputDatasetFile.close()
-        vectorizer = OneHotEncoder()
-        vectorizer.fit_transform(np.array(DataFile).reshape(-1,1))
-        PredictedValue = vectorizer.inverse_transform(PredictedArray)
-        Target = vectorizer.inverse_transform(TrainTarget[23])
+        labelencoder = LabelEncoder()
+        labelencoder.fit_transform(DataFile)
+        PredictedValue = labelencoder.inverse_transform([PredictedArray[0]])
+        Target = labelencoder.inverse_transform([TrainTarget[23]])
         print("Predict")
         print(PredictedValue)
         print("Target")
@@ -225,9 +235,9 @@ class SpeechRecognition:
         ParametrsFile = np.load(PathParametrs)
         self.GenerateWeights()
         self.w1 = ParametrsFile['arr_0']
-        # self.w2 = ParametrsFile['arr_1']
-        # self.b1 = ParametrsFile['arr_2']
-        # self.b2 = ParametrsFile['arr_3']
+        self.w2 = ParametrsFile['arr_1']
+        self.b1 = ParametrsFile['arr_2']
+        self.b2 = ParametrsFile['arr_3']
         logger.info("Weights of neural network was loaded.")
 
     def save(self,PathParametrs = os.path.join(ProjectDir,'Models','SpeechRecognition.npz')):
@@ -238,7 +248,8 @@ if __name__ == '__main__':
     speech_recognition = SpeechRecognition()
     # speech_recognition.train(TrainInput,TrainTarget)
     speech_recognition.load()
+    # speech_recognition.predict(TrainInput[23])
     speech_recognition.predict(TrainInput[23])
-    speech_recognition.predict(TrainInput[23])
-    # speech_recognition.score(TrainInput,TrainTarget)
+    speech_recognition.score(TrainInput,TrainTarget)
+    # Clean()
     

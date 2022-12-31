@@ -13,7 +13,6 @@ from Preprocessing import PreprocessingDataset
 from NeuralNetwork import NeuralNetwork
 import geocoder
 from pyowm import OWM
-from num2words import num2words
 import threading
 from MusicManager import MusicManager
 import platform
@@ -69,7 +68,7 @@ class ArtyomAssistant:
             'gratitude':self.GratitudeCommand,'vscode':self.VSCodeCommand,
             'todo':self.ToDoCommand,'alarm':self.AlarmCommand,
             'timer':self.TimerCommand,'stopwatch':self.StopwatchCommand,
-            'screenshot':self.ScreenShotCommand
+            'screenshot':self.ScreenShotCommand,
         }
         self.RecognitionModel = Model('model')
         self.Recognition = KaldiRecognizer(self.RecognitionModel,16000)
@@ -135,16 +134,17 @@ class ArtyomAssistant:
         one_call = mgr.one_call(lat=coordinates[0], lon=coordinates[1])
         temp = one_call.current.temperature('celsius')['temp']  # {'temp_max': 10.5, 'temp': 9.7, 'temp_min': 9.0}
         print(temp)
-        self.Tell('Сейчас {} градусов по цельсию'.format(num2words(int(temp), lang='ru')))
+        # self.Tell('Сейчас {} градусов по цельсию'.format(num2words(int(temp), lang='ru')))
     
     def TimeCommand(self):
-
+        print("time")
         hours = int(time.strftime('%H'))
         minutes = int(time.strftime('%M'))
         time_str = self.FilteringTransforms(f'Сейчас {hours} {minutes}',to_words=True)
+        print(time_str)
         self.Tell(time_str)
 
-    def MusicCommand(self,command):
+    def MusicCommand(self,command,text):
         if command == 'music':
             if MusicManager.PausedMusic == False and MusicManager.PlayingMusic == False and MusicManager.StoppedMusic == True:
                 MusicThread = threading.Thread(target = MusicManager.PlayMusic)
@@ -158,7 +158,7 @@ class ArtyomAssistant:
                 MusicManager.UnpauseMusic()
 
         elif command == 'off-music':
-            if MusicManager.PlayingMusic == True and MusicManager.StoppedMusic == False:
+            if MusicManager.PlayingMusic == True:
                 MusicManager.StopMusic()
             elif MusicManager.PlayingMusic == False and MusicManager.StoppedMusic == True:
                 self.Tell(random.choice(ANSWERS['off-music']))
@@ -319,7 +319,7 @@ class ArtyomAssistant:
         if PredictedValue == "don't_know":
             self.Tell(random.choice(ANSWERS["don't_know"]))
         else:
-            operation = CATEGORIES[PredictedValue]
+            operation = PredictedValue#CATEGORIES[PredictedValue]
 
             if operation == 'music' or operation == 'off-music' or operation == 'pause-music' or operation == 'unpause-music':
                 self.MusicCommand(operation,text)
@@ -328,7 +328,8 @@ class ArtyomAssistant:
             elif operation == 'timer' or operation == 'off-timer' or operation == 'pause-timer' or operation == 'unpause-timer':
                 self.TimerCommand(operation,text)
             else:
-                self.Functions[operation]()
+                print("Hello")
+                self.Functions[operation]
 
     def Start(self):
         self.Alarm_Class = Alarm()

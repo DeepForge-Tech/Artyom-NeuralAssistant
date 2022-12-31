@@ -27,13 +27,18 @@ class MusicManager:
         pygame.mixer.music.pause()
         self.PausedMusic = True
         self.PlayingMusic = False
+        self.StoppedMusic = False
 
     def UnpauseMusic(self):
         pygame.mixer.music.unpause()
         self.PausedMusic = False
         self.PlayingMusic = True
+        self.StoppedMusic = False
 
     def PlayMusic(self):
+        self.PlayingMusic = True
+        self.StoppedMusic = False
+        self.PausedMusic = False
         for dir, subdir, files in os.walk(MusicPath):
             for file in files:
                 # print(os.path.join(dir, file))

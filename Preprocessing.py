@@ -4,9 +4,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import os
 import json
 import random
-## import librosa
-## import librosa.display
-from sklearn.preprocessing import LabelEncoder,OneHotEncoder
+import librosa
+from sklearn.preprocessing import LabelEncoder
 from rich.progress import track
 
 # Подготовка датасета
@@ -31,62 +30,62 @@ class PreprocessingDataset:
     def ToNumpyArray(self,array):
         return np.array(array)
 
-    # def PreprocessingAudio(self,PathAudio:str,mode:str = 'train'):
-    #     self.Mode = mode
-    #     self.PathAudio = PathAudio
-    #     if self.Mode == 'train' or self.Mode == 'test':
-    #         self.DatasetFiles = list(os.walk(self.PathAudio))
-    #         for (root,dirs,files) in track(os.walk(self.PathAudio,topdown=True),description='[green]Preprocessing'):
-    #             for file in files[:2]:
-    #                 if file.endswith('.wav'):
-    #                     self.AudioFile = os.path.join(root,file)
-    #                     audio,sample_rate = librosa.load(self.AudioFile,res_type='kaiser_fast')
-    #                     mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=64)
-    #                     mfccs = np.mean(mfccs.T,axis=0)
-    #                     self.x.append(mfccs)
-    #                 elif file.endswith('.txt'):
-    #                     file = open(os.path.join(root,file),'r+',encoding="utf-8")
-    #                     DataFile = file.read()
-    #                     self.y.append(DataFile)
-    #                     file.close()
-    #             # print (root)
-    #             # print("\n" + "\n" + "\n")
-    #             # print (dirs)
-    #             # print("\n" + "\n" + "\n")
-    #             # print (files)
-    #             # print("\n" + "\n" + "\n")
-    #             # print ('--------------------------------')
-    #         InputDatasetFile = open("Datasets/SpeechInputDataset.json", "w", encoding ='utf-8')
-    #         json.dump(self.y, InputDatasetFile,ensure_ascii=False,sort_keys=True, indent=2)
-    #         InputDatasetFile.close()
-    #         labelencoder=OneHotEncoder()
-    #         labelencoder = labelencoder.fit_transform(np.array(self.y).reshape(-1,1))
-    #         VectorizedData = np.array(labelencoder.toarray(),dtype='int')
-    #         # vectorizer = OneHotEncoder()
-    #         # vectorizer = vectorizer.fit_transform(np.array(self.y).reshape(-1,1))
-    #         # VectorizedData = vectorizer.toarray()
-    #         self.TrainTarget = VectorizedData
-    #         self.TrainInput = self.ToMatrix(self.x)
-    #         print(self.TrainTarget)
-    #         return self.TrainInput,self.TrainTarget
+    def PreprocessingAudio(self,PathAudio:str,mode:str = 'train'):
+        self.Mode = mode
+        self.PathAudio = PathAudio
+        if self.Mode == 'train' or self.Mode == 'test':
+            self.DatasetFiles = list(os.walk(self.PathAudio))
+            for (root,dirs,files) in track(os.walk(self.PathAudio,topdown=True),description='[green]Preprocessing'):
+                for file in files[:2]:
+                    if file.endswith('.wav'):
+                        self.AudioFile = os.path.join(root,file)
+                        audio,sample_rate = librosa.load(self.AudioFile,mono=True)
+                        mfcc = librosa.feature.mfcc(y = audio, sr = sample_rate)
+                        mfcc = np.mean(mfcc.T,axis=0)
+                        self.x.append(np.array(mfcc))
+                    elif file.endswith('.txt'):
+                        file = open(os.path.join(root,file),'r+',encoding="utf-8")
+                        DataFile = file.read()
+                        self.y.append(DataFile)
+                        file.close()
+                # print (root)
+                # print("\n" + "\n" + "\n")
+                # print (dirs)
+                # print("\n" + "\n" + "\n")
+                # print (files)
+                # print("\n" + "\n" + "\n")
+                # print ('--------------------------------')
+            InputDatasetFile = open("Datasets/SpeechInputDataset.json", "w", encoding ='utf-8')
+            json.dump(self.y, InputDatasetFile,ensure_ascii=False,sort_keys=True, indent=2)
+            InputDatasetFile.close()
+            labelencoder=LabelEncoder()
+            labelencoder = labelencoder.fit_transform(self.y)
+            # classes= list(labelencoder.classes_)
+            VectorizedData = np.array(labelencoder)
+            # vectorizer = OneHotEncoder()
+            # vectorizer = vectorizer.fit_transform(np.array(self.y).reshape(-1,1))
+            # VectorizedData = vectorizer.toarray()
+            self.TrainTarget = VectorizedData
+            self.TrainInput = self.ToMatrix(self.x)
+            return self.TrainInput,self.TrainTarget
             
-    #     elif self.Mode == 'predict':
-    #         InputDatasetFile = open("Datasets/SpeechInputDataset.json", "r", encoding ='utf8')
-    #         DataFile = json.load(InputDatasetFile)
-    #         InputDatasetFile.close()
+        elif self.Mode == 'predict':
+            InputDatasetFile = open("Datasets/SpeechInputDataset.json", "r", encoding ='utf8')
+            DataFile = json.load(InputDatasetFile)
+            InputDatasetFile.close()
             
-    #         self.AudioFile = self.PathAudio
-    #         audio,sample_rate = librosa.load(self.AudioFile,res_type='kaiser_fast')
-    #         mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=64)
-    #         mfccs = np.mean(mfccs.T,axis=0)
-    #         labelencoder=LabelEncoder()
-    #         labelencoder = labelencoder.fit_transform(DataFile)
-    #         VectorizedData = labelencoder.transform(mfccs)
-    #         # vectorizer = OneHotEncoder()
-    #         # vectorizer.fit_transform(DataFile)
-    #         # VectorizedData = vectorizer.transform(mfccs).toarray()
-    #         self.PredictInput = self.ToMatrix(VectorizedData)
-    #         return self.PredictInput
+            self.AudioFile = self.PathAudio
+            audio,sample_rate = librosa.load(self.AudioFile,res_type='kaiser_fast')
+            mfccs = librosa.feature.mfcc(y=audio,sr=sample_rate,n_mfcc=64)
+            mfccs = np.mean(mfccs.T,axis=0)
+            labelencoder=LabelEncoder()
+            labelencoder = labelencoder.fit_transform(DataFile)
+            VectorizedData = labelencoder.transform(mfccs)
+            # vectorizer = OneHotEncoder()
+            # vectorizer.fit_transform(DataFile)
+            # VectorizedData = vectorizer.transform(mfccs).toarray()
+            self.PredictInput = self.ToMatrix(VectorizedData)
+            return self.PredictInput
 
     def PreprocessingText(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
         if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
@@ -143,7 +142,7 @@ class PreprocessingDataset:
             self.PredictInput = self.ToMatrix(vectorizer.transform(self.PredictArray).toarray())
             return self.PredictInput
 
-# TrainInput,TrainTarget = PreprocessingDataset().PreprocessingAudio(PathAudio="C:/Users/Blackflame576/Documents/Blackflame576/DigitalBit/Artyom-NeuralAssistant/Datasets/SpeechDataset/")
+TrainInput,TrainTarget = PreprocessingDataset().PreprocessingAudio(PathAudio="C:/Users/Blackflame576/Documents/Blackflame576/DigitalBit/Artyom-NeuralAssistant/Datasets/SpeechDataset/")
 # x = np.linspace(0, 2*np.pi, 8)
 # y = np.sin(x) + np.random.normal(0, 0.4, 8)
 # from sklearn.linear_model import LogisticRegression

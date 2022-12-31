@@ -172,7 +172,7 @@ class NeuralNetwork:
         PredictedValue = np.argmax(PredictedArray)
         if float(PredictedArray[0][PredictedValue]) >= MinimalThreshold:
             print(self.CATEGORIES_TARGET[str(PredictedValue)])
-            return self.CATEGORIES_TARGET[str(PredictedValue)]
+            return self.CATEGORIES_TARGET[str(PredictedValue)],PredictedValue
         else:
             print("don't know")
             # Если нейросеть не уверенна в своём ответе,то отправляется ответ в виде фразы 

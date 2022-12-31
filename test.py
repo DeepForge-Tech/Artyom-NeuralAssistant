@@ -940,3 +940,56 @@
 # #     print(test["notes"]["03/12/22"])
 # # else:
 # #     test.update({"notes":{"03/12/22":[1]}})
+import RPi.GPIO as GPIO #Importe la bibliothèque pour contrôler les GPIOs
+import time
+GPIO.setmode(GPIO.BOARD) #Définit le mode de numérotation (Board)
+GPIO.setwarnings(False) #On désactive les messages d'alerte
+
+LED = 7 #Définit le numéro du port GPIO qui alimente la led
+#GPIO.setup(LED, GPIO.OUT) #Active le contrôle du GPIO
+
+#state = GPIO.input(LED)
+#GPIO.output(LED, GPIO.HIGH)
+#GPIO.output(LED, GPIO.LOW)
+#GPIO.setup(12, GPIO.OUT)
+#GPIO.output(12, GPIO.HIGH)
+#GPIO.setup(18, GPIO.OUT)
+#GPIO.output(18, GPIO.HIGH)
+# while True:
+#         command = input(">>>")
+#         if command == "red":
+#             GPIO.setup(LED, GPIO.OUT)
+#             if GPIO.input(LED) == GPIO.LOW:
+#                 GPIO.output(LED, GPIO.HIGH)
+#             else:
+#                 GPIO.output(LED, GPIO.LOW)
+#         elif command == "yellow":
+#             GPIO.setup(12, GPIO.OUT)
+#             if GPIO.input(12) == GPIO.LOW:
+#                 GPIO.output(12, GPIO.HIGH)
+#             else:
+#                 GPIO.output(12, GPIO.LOW)
+#         elif command == "green":
+#             GPIO.setup(18, GPIO.OUT)
+#             if GPIO.input(18) == GPIO.LOW:
+#                 GPIO.output(18, GPIO.HIGH)
+#             else:
+#                 GPIO.output(18, GPIO.LOW)
+#         else:
+#             break
+while True:
+    try:
+        GPIO.setup(LED, GPIO.OUT)
+        GPIO.output(LED, GPIO.HIGH)
+        time.sleep(1)
+        GPIO.output(LED, GPIO.LOW)
+        GPIO.setup(12, GPIO.OUT)
+        GPIO.output(12, GPIO.HIGH)
+        time.sleep(1)
+        GPIO.output(12, GPIO.LOW)
+        GPIO.setup(18, GPIO.OUT)
+        GPIO.output(18, GPIO.HIGH)
+        time.sleep(1)
+        GPIO.output(18, GPIO.LOW)
+    except KeyboardInterrupt:
+        GPIO.cleanup()
