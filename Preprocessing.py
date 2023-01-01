@@ -88,16 +88,16 @@ class PreprocessingDataset:
             return self.PredictInput
 
     def PreprocessingText(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
-        if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
-            file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
+        if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset_2.json')):
+            file = open('Datasets/ArtyomDataset_2.json','r',encoding='utf-8')
             DataFile = json.load(file)
             dataset = DataFile['dataset']
             file.close()
         else:
             raise RuntimeError
 
-        if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
-            file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
+        if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings_2.json')):
+            file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings_2.json'),'r',encoding='utf-8')
             DataFile = json.load(file)
             CATEGORIES = DataFile['CATEGORIES']
             CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
@@ -142,7 +142,7 @@ class PreprocessingDataset:
             self.PredictInput = self.ToMatrix(vectorizer.transform(self.PredictArray).toarray())
             return self.PredictInput
 
-TrainInput,TrainTarget = PreprocessingDataset().PreprocessingAudio(PathAudio="C:/Users/Blackflame576/Documents/Blackflame576/DigitalBit/Artyom-NeuralAssistant/Datasets/SpeechDataset/")
+# TrainInput,TrainTarget = PreprocessingDataset().PreprocessingAudio(PathAudio="C:/Users/Blackflame576/Documents/Blackflame576/DigitalBit/Artyom-NeuralAssistant/Datasets/SpeechDataset/")
 # x = np.linspace(0, 2*np.pi, 8)
 # y = np.sin(x) + np.random.normal(0, 0.4, 8)
 # from sklearn.linear_model import LogisticRegression

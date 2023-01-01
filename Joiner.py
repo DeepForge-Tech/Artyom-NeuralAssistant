@@ -19,23 +19,26 @@ SettingsFile = open(os.path.join(ProjectDir,"NeuralNetworkSettings/Settings_2.js
 Settings = json.load(SettingsFile)
 SettingsFile.close()
 
+LatestInt = -1
+for value in Settings["CATEGORIES"]:
+    LatestInt += 1
+print(LatestInt)
 for Group in AdditionalDataset:
-    for symbol in symbols:
-        Question = (Group["question_text"]).replace(symbol,"")
-        Answer = (Group["answer_text"]).replace(symbol,"")
+    # for symbol in symbols:
+    Question = (Group["question_text"]).replace('"',"")
+    Answer = (Group["answer_text"]).replace('"',"")
     Dataset["dataset"].update(
         {
-            Answer: [Question]
+            Answer:{
+                "questions": [Question]
+            }
         }
     )
     ArtyomSettings.update(
         {
-            Answer:[Question]
+            Answer: [Answer]
         }
     )
-    LatestInt = -1
-    for value in Settings["CATEGORIES"]:
-        LatestInt += 1
     # LatestInt_2 = LatestInt
     LatestInt += 1
     Settings["CATEGORIES"].update(

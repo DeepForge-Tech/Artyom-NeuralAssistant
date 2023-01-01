@@ -58,6 +58,16 @@ stopwatch = Stopwatch()
 
 class ArtyomAssistant:
     def __init__(self):
+        self.Functions = [
+            self.CommunicationCommand,self.WeatherCommand,self.YoutubeCommand,
+            self.WebbrowserCommand,self.MusicCommand,self.NewsCommand,
+            self.ToDoCommand,self.CalendarCommand,self.JoikesCommand,
+            self.ExitCommand,self.TimeCommand,self.GratitudeCommand,
+            self.StopwatchCommand,self.TimerCommand,self.ShutdownCommand,
+            self.RebootCommand,self.HibernationCommand,self.AlarmCommand,
+            self.FavouriteAppCommand,self.VSCodeCommand,self.NotepadCommand,
+            self.MailCommand,self.DateCommand,self.HowAreYouCommand,self.WhatYouDoCommand
+        ]
         self.Functions = {
             'communication':self.CommunicationCommand,'weather':self.WeatherCommand,
             'time':self.TimeCommand,'youtube':self.YoutubeCommand,
@@ -134,7 +144,8 @@ class ArtyomAssistant:
         one_call = mgr.one_call(lat=coordinates[0], lon=coordinates[1])
         temp = one_call.current.temperature('celsius')['temp']  # {'temp_max': 10.5, 'temp': 9.7, 'temp_min': 9.0}
         print(temp)
-        # self.Tell('Сейчас {} градусов по цельсию'.format(num2words(int(temp), lang='ru')))
+        temp_str = self.FilteringTransforms(f'Сейчас {temp} ',to_words=True)
+        self.Tell(temp_str)
     
     def TimeCommand(self):
         print("time")
