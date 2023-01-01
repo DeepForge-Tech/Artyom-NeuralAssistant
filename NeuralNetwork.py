@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 from rich.progress import track
 import mplcyberpunk
 from loguru import logger
+import platform
+hostname = (platform.uname()[1]).lower()
+if hostname.startswith("rpi"):
+    from LED_RPI import LED_Green,LED_Red,LED_Yellow,Clean
 
 plt.style.use("cyberpunk")
 np.random.seed(0)
@@ -57,6 +61,8 @@ class NeuralNetwork:
 
     # Функция для генерации весов нейросети
     def GenerateWeights(self):
+        if hostname.startswith("rpi"):
+            LED_Red()
         try:
             self.w1 = np.random.rand(self.INPUT_DIM, self.HIDDEN_DIM)
             self.b1 = np.random.rand(1, self.HIDDEN_DIM)
@@ -136,6 +142,8 @@ class NeuralNetwork:
             logger.error(f"Exception error: {Error}.")
 
     def train(self,TrainInput,TrainTarget):
+        if hostname.startswith("rpi"):
+            LED_Yellow()
         logger.info("Neural network was started of training.")
         # Генераци весов нейросети по длине входного массива(датасета)
         self.INPUT_DIM = len(TrainInput[0])
@@ -165,7 +173,9 @@ class NeuralNetwork:
         logger.info("Neural network was trained on the dataset.")
         logger.info(f"Accuracy: {self.Accuracy}")
         logger.info(f"Loss graph was saved at the path: {self.PathLossGraph}")
-
+        if hostname.startswith("rpi"):
+            LED_Green()
+            
     # Функция для вызова нейросети
     def predict(self,Input):
         PredictedArray = self.FeedForward(Input)
