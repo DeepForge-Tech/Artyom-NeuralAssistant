@@ -315,7 +315,7 @@ class ArtyomAssistant:
     def AlarmCommand(self):
         pass
 
-    def CommandManager(self,PredictedValue,text:None):
+    def CommandManager(self,PredictedValue,text:None,PredictedInt:int):
         if PredictedValue == "don't_know":
             self.Tell(random.choice(ANSWERS["don't_know"]))
         else:
@@ -346,8 +346,8 @@ class ArtyomAssistant:
                     Input = text.replace(name.lower(),"")
                     Input = [text]
                     Input = Preprocessing.PreprocessingText(PredictArray = Input,mode = 'predict')
-                    PredictedValue = network.predict(Input)
-                    self.CommandManager(PredictedValue,text)
+                    PredictedValue,PredictedInt = network.predict(Input)
+                    self.CommandManager(PredictedValue,text,PredictedInt)
                     break
                 elif name.lower() in text and len(text.split()) == 1:
                     self.Tell('Чем могу помочь?')

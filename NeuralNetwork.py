@@ -15,8 +15,8 @@ ProjectDir = os.getcwd()
 logger.add(os.path.join(ProjectDir,'Logs/NeuralNetwork.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
 
 # Подготовка датасета
-if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
-    file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
+if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset_2.json')):
+    file = open('Datasets/ArtyomDataset_2.json','r',encoding='utf-8')
     Preprocessing = PreprocessingDataset()
     DataFile = json.load(file)
     dataset = DataFile['dataset']
@@ -25,8 +25,8 @@ if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
 else:
     raise RuntimeError
 
-if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
-    file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
+if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings_2.json')):
+    file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings_2.json'),'r',encoding='utf-8')
     DataFile = json.load(file)
     CATEGORIES = DataFile['CATEGORIES']
     CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']
@@ -190,11 +190,11 @@ class NeuralNetwork:
         return accuracy
     
     # Сохранение весов и смещений нейросети
-    def save(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant.npz')):
+    def save(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant_2.npz')):
         np.savez_compressed(PathParametrs, self.w1,self.w2,self.b1,self.b2,EPOCHS,learning_rate,BATCH_SIZE,MinimalThreshold)
     
     # Загрузка весов и смещений нейросети
-    def load(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant.npz')):
+    def load(self,PathParametrs = os.path.join(ProjectDir,'Models','Artyom_NeuralAssistant_2.npz')):
         ParametrsFile = np.load(PathParametrs)
         self.w1 = ParametrsFile['arr_0']
         self.w2 = ParametrsFile['arr_1']

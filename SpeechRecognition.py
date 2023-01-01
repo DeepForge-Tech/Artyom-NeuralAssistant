@@ -19,14 +19,14 @@ ProjectDir = os.getcwd()
 AudioDatasetDir = os.path.join(ProjectDir,"Datasets/SpeechDataset/")
 logger.add(os.path.join(ProjectDir,'Logs/SpeechNeuralNetwork.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
 
-learning_rate = 0.000002
+learning_rate = 0.001
 EPOCHS = 200000
 BATCH_SIZE = 64
 
 class SpeechRecognition:
     def __init__(self):
         self.INPUT_DIM = 20
-        self.HIDDEN_DIM = 128
+        self.HIDDEN_DIM = 512
         self.OUTPUT_DIM = 256
         self.GenerateWeights()
         self.LossArray = []
@@ -192,7 +192,7 @@ class SpeechRecognition:
         InputDatasetFile.close()
         labelencoder = LabelEncoder()
         labelencoder.fit_transform(DataFile)
-        PredictedValue = labelencoder.inverse_transform([PredictedArray[0]])
+        PredictedValue = labelencoder.inverse_transform([PredictedArray])
         Target = labelencoder.inverse_transform([TrainTarget[23]])
         print("Predict")
         print(PredictedValue)
@@ -226,9 +226,6 @@ class SpeechRecognition:
         accuracy = correct / len(TrainInput)
         print(accuracy)
         print(correct)
-        if correct >= 1:
-            Target = vectorizer.inverse_transform([TrainTarget[id_true]])
-            print(TrainTarget[id_true])
         return accuracy
 
     def load(self,PathParametrs = os.path.join(ProjectDir,'Models','SpeechRecognition.npz')):
