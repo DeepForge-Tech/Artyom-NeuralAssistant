@@ -111,7 +111,7 @@ class ArtyomAssistant:
                 if answer['text']:
                     yield answer['text']
     
-    def FilteringTransforms(self,text:str,to_nums:bool = True,to_words:bool = False):
+    def FilteringTransforms(self,text:str,to_nums:bool = True,to_words:bool = False,from_date:bool = False):
         if to_nums == True:
             TransformedText = ""
             Nums = []
@@ -132,6 +132,16 @@ class ArtyomAssistant:
                     text = text.replace(number,str(Transforms["Nums"][number]))
             TransformedText = text
             return TransformedText,Words
+        elif from_date == True:
+            TransformedText = ""
+            Words = []
+            LocalText = text.split()
+            for string_date in LocalText:
+                if string_date in Transforms["Date"]:
+                    Words.append(Transforms["Date"][string_date])
+                    text = text.replace(string_date,str(Transforms["Date"][string_date]))
+            TransformedText = text
+            return TransformedText,Words
     
     def CommunicationCommand(self):
         self.Tell(random.choice(ANSWERS['communication']))
@@ -146,6 +156,12 @@ class ArtyomAssistant:
         print(temp)
         temp_str = self.FilteringTransforms(f'Сейчас {temp} ',to_words=True)
         self.Tell(temp_str)
+    
+    def DateCommand(self):
+        LocalDate = date.today().strftime("%d %B")
+        LocalDate = self.FilteringTransforms(LocalDate)
+        LocalDate_str = f"Сегодня {LocalDate}"
+        self.Tell(LocalDate_str)
     
     def TimeCommand(self):
         print("time")
