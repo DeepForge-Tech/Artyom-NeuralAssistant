@@ -19,14 +19,14 @@ ProjectDir = os.getcwd()
 AudioDatasetDir = os.path.join(ProjectDir,"Datasets/SpeechDataset/")
 logger.add(os.path.join(ProjectDir,'Logs/SpeechNeuralNetwork.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
 
-learning_rate = 0.001
-EPOCHS = 200000
-BATCH_SIZE = 64
+learning_rate = 0.00000002
+EPOCHS = 500000
+BATCH_SIZE = 120
 
 class SpeechRecognition:
     def __init__(self):
         self.INPUT_DIM = 20
-        self.HIDDEN_DIM = 512
+        self.HIDDEN_DIM = 128
         self.OUTPUT_DIM = 256
         self.GenerateWeights()
         self.LossArray = []
@@ -40,7 +40,7 @@ class SpeechRecognition:
     def GenerateWeights(self):
         if hostname.startswith("rpi"):
             LED_Red()
-        # try:
+        try:
             self.w1 = np.random.rand(self.INPUT_DIM, self.HIDDEN_DIM)
             self.b1 = np.random.rand(1, self.HIDDEN_DIM)
             self.w2 = np.random.rand(self.HIDDEN_DIM, self.OUTPUT_DIM)
@@ -49,8 +49,8 @@ class SpeechRecognition:
             self.b1 = (self.b1 - 0.5) * 2 * np.sqrt(1/self.INPUT_DIM)
             self.w2 = (self.w2 - 0.5) * 2 * np.sqrt(1/self.HIDDEN_DIM)
             self.b2 = (self.b2 - 0.5) * 2 * np.sqrt(1/self.HIDDEN_DIM)
-        # except Exception as Error:
-        #     logger.error(f"Exception error: {Error}.")
+        except Exception as Error:
+            logger.error(f"Exception error: {Error}.")
 
     # Функция активации
     def relu(self,t):
@@ -235,6 +235,10 @@ class SpeechRecognition:
         self.w2 = ParametrsFile['arr_1']
         self.b1 = ParametrsFile['arr_2']
         self.b2 = ParametrsFile['arr_3']
+        print(ParametrsFile['arr_4'])
+        print(ParametrsFile['arr_5'])
+        print(ParametrsFile['arr_6'])
+        print(ParametrsFile['arr_7'])
         logger.info("Weights of neural network was loaded.")
 
     def save(self,PathParametrs = os.path.join(ProjectDir,'Models','SpeechRecognition.npz')):
@@ -243,8 +247,8 @@ class SpeechRecognition:
 if __name__ == '__main__':
     TrainInput,TrainTarget = PreprocessingDataset().PreprocessingAudio(PathAudio=AudioDatasetDir,mode='train')
     speech_recognition = SpeechRecognition()
-    # speech_recognition.train(TrainInput,TrainTarget)
-    speech_recognition.load()
+    speech_recognition.train(TrainInput,TrainTarget)
+    # speech_recognition.load()
     # speech_recognition.predict(TrainInput[23])
     speech_recognition.predict(TrainInput[23])
     speech_recognition.score(TrainInput,TrainTarget)
