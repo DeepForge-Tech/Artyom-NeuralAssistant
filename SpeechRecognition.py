@@ -20,8 +20,8 @@ AudioDatasetDir = os.path.join(ProjectDir,"Datasets/SpeechDataset/")
 logger.add(os.path.join(ProjectDir,'Logs/SpeechNeuralNetwork.log'),format="{time} {level} {message}",level="INFO",rotation="200 MB",diagnose=True)
 
 learning_rate = 0.00000002
-EPOCHS = 500000
-BATCH_SIZE = 120
+EPOCHS = 1000000
+BATCH_SIZE = 150
 
 class SpeechRecognition:
     def __init__(self):

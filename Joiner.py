@@ -112,6 +112,19 @@ def AddValue(NameCategory,Value):
     elif not NameCategory in Dataset["dataset"]:
         print("Category is not found in dataset.")
 
+def Save():
+    DatasetFile = open(os.path.join(ProjectDir,"Datasets/ArtyomDataset_2.json"),"w",encoding="utf-8")
+    json.dump(Dataset,DatasetFile,ensure_ascii=False, indent=2)
+    DatasetFile.close
+
+    ArtyomSettingsFile = open(os.path.join(ProjectDir,"NeuralNetworkSettings/ArtyomAnswers_2.json"),"w",encoding="utf-8")
+    json.dump(ArtyomSettings,ArtyomSettingsFile,ensure_ascii=False, indent=2)
+    ArtyomSettingsFile.close()
+
+    SettingsFile = open(os.path.join(ProjectDir,"NeuralNetworkSettings/Settings_2.json"),"w",encoding="utf-8")
+    json.dump(Settings,SettingsFile,ensure_ascii=False, indent=2)
+    SettingsFile.close()
+
 while True:
     command = input(">>>")
     if command == "ac":
@@ -124,17 +137,9 @@ while True:
         AddValue(category,value)
     elif command == "rubq":
         RuBQ()
+    elif command == "save":
+        Save()
     elif command == 'exit':
         break
 
-DatasetFile = open(os.path.join(ProjectDir,"Datasets/ArtyomDataset_2.json"),"w",encoding="utf-8")
-json.dump(Dataset,DatasetFile,ensure_ascii=False, indent=2)
-DatasetFile.close
-
-ArtyomSettingsFile = open(os.path.join(ProjectDir,"NeuralNetworkSettings/ArtyomAnswers_2.json"),"w",encoding="utf-8")
-json.dump(ArtyomSettings,ArtyomSettingsFile,ensure_ascii=False, indent=2)
-ArtyomSettingsFile.close()
-
-SettingsFile = open(os.path.join(ProjectDir,"NeuralNetworkSettings/Settings_2.json"),"w",encoding="utf-8")
-json.dump(Settings,SettingsFile,ensure_ascii=False, indent=2)
-SettingsFile.close()
+Save()
