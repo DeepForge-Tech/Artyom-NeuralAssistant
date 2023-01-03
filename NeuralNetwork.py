@@ -223,7 +223,7 @@ if __name__ == '__main__':
     # Вызов класса нейросети
     network = NeuralNetwork(CATEGORIES,CATEGORIES_TARGET)
     # Вызов функции тренировки нейросети
-    # network.train(TrainInput,TrainTarget)
-    network.load()
+    network.train(TrainInput,TrainTarget)
+    # network.load()
     # Функция для вызова нейросети
     network.predict(Preprocessing.PreprocessingText(PredictArray = ['скажи время'],mode = 'predict'))
