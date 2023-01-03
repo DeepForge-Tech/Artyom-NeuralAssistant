@@ -4,7 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import os
 import json
 import random
-import librosa
+# import librosa
 from sklearn.preprocessing import LabelEncoder
 from rich.progress import track
 
@@ -48,13 +48,6 @@ class PreprocessingDataset:
                         DataFile = file.read()
                         self.y.append(DataFile)
                         file.close()
-                # print (root)
-                # print("\n" + "\n" + "\n")
-                # print (dirs)
-                # print("\n" + "\n" + "\n")
-                # print (files)
-                # print("\n" + "\n" + "\n")
-                # print ('--------------------------------')
             InputDatasetFile = open("Datasets/SpeechInputDataset.json", "w", encoding ='utf-8')
             json.dump(self.y, InputDatasetFile,ensure_ascii=False,sort_keys=True, indent=2)
             InputDatasetFile.close()
@@ -88,16 +81,16 @@ class PreprocessingDataset:
             return self.PredictInput
 
     def PreprocessingText(self,PredictArray:list = [],Dictionary:dict = {},mode = 'train'):
-        if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset_2.json')):
-            file = open('Datasets/ArtyomDataset_2.json','r',encoding='utf-8')
+        if os.path.exists(os.path.join(ProjectDir,'Datasets/ArtyomDataset.json')):
+            file = open('Datasets/ArtyomDataset.json','r',encoding='utf-8')
             DataFile = json.load(file)
             dataset = DataFile['dataset']
             file.close()
         else:
             raise RuntimeError
 
-        if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings_2.json')):
-            file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings_2.json'),'r',encoding='utf-8')
+        if os.path.exists(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json')):
+            file = open(os.path.join(ProjectDir,'NeuralNetworkSettings/Settings.json'),'r',encoding='utf-8')
             DataFile = json.load(file)
             CATEGORIES = DataFile['CATEGORIES']
             CATEGORIES_TARGET = DataFile['CATEGORIES_TARGET']

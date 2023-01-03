@@ -68,18 +68,18 @@ class ArtyomAssistant:
             self.FavouriteAppCommand,self.VSCodeCommand,self.NotepadCommand,
             self.MailCommand,self.DateCommand,self.HowAreYouCommand,self.WhatYouDoCommand
         ]
-        self.Functions = {
-            'communication':self.CommunicationCommand,'weather':self.WeatherCommand,
-            'time':self.TimeCommand,'youtube':self.YoutubeCommand,
-            'webbrowser':self.WebbrowserCommand,'hibernation':self.HibernationCommand,'reboot':self.RebootCommand,
-            'shutdown':self.ShutdownCommand,'news':self.NewsCommand,
-            'todo':self.TodoCommand,'calendar':self.CalendarCommand,
-            'joikes':self.JoikesCommand,'exit':self.ExitCommand,
-            'gratitude':self.GratitudeCommand,'vscode':self.VSCodeCommand,
-            'todo':self.ToDoCommand,'alarm':self.AlarmCommand,
-            'timer':self.TimerCommand,'stopwatch':self.StopwatchCommand,
-            'screenshot':self.ScreenShotCommand,
-        }
+        # self.Functions = {
+        #     'communication':self.CommunicationCommand,'weather':self.WeatherCommand,
+        #     'time':self.TimeCommand,'youtube':self.YoutubeCommand,
+        #     'webbrowser':self.WebbrowserCommand,'hibernation':self.HibernationCommand,'reboot':self.RebootCommand,
+        #     'shutdown':self.ShutdownCommand,'news':self.NewsCommand,
+        #     'todo':self.TodoCommand,'calendar':self.CalendarCommand,
+        #     'joikes':self.JoikesCommand,'exit':self.ExitCommand,
+        #     'gratitude':self.GratitudeCommand,'vscode':self.VSCodeCommand,
+        #     'todo':self.ToDoCommand,'alarm':self.AlarmCommand,
+        #     'timer':self.TimerCommand,'stopwatch':self.StopwatchCommand,
+        #     'screenshot':self.ScreenShotCommand,
+        # }
         self.RecognitionModel = Model('model')
         self.Recognition = KaldiRecognizer(self.RecognitionModel,16000)
         self.RecognitionAudio = pyaudio.PyAudio()
@@ -146,6 +146,21 @@ class ArtyomAssistant:
     def CommunicationCommand(self):
         self.Tell(random.choice(ANSWERS['communication']))
     
+    def FavouriteAppCommand(self):
+        pass
+
+    def NotepadCommand(self):
+        pass
+
+    def MailCommand(self):
+        pass
+
+    def HowAreYouCommand(self):
+        pass
+
+    def WhatYouDoCommand(self):
+        pass
+
     def WeatherCommand(self,WithInternet:bool=False):
         geolocation = geocoder.ip('me')
         coordinates = geolocation.latlng
@@ -356,7 +371,7 @@ class ArtyomAssistant:
                 self.TimerCommand(operation,text)
             else:
                 print("Hello")
-                self.Functions[operation]
+                self.Functions[PredictedInt]
 
     def Start(self):
         self.Alarm_Class = Alarm()

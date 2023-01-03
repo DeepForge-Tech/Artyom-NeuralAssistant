@@ -171,23 +171,54 @@ while True:
         category = input("Name Category:")
         value = input("Enter one value:")
         AddCategory(category,value)
+    elif command == "mac":
+        while True:
+            category = input("Name Category:")
+            value = input("Enter one value:")
+            if value == "exit_mac":
+                break
+            else:
+                AddCategory(category,value)
     elif command == "av":
         category = input("Name Category:")
         value = input("Value:")
         AddValue(category,value)
+    elif command == "mav":
+        category = input("Name Category:")
+        while True:
+            value = input("Value:")
+            if value == 'exit_mav':
+                break
+            else:
+                AddValue(category,value)
     elif command == 'aca':
         category = input("Name Category:")
         value = input("Enter one value:")
         AddCategory_Answers(category,value)
+    elif command == 'maca':
+        while True:
+            category = input("Name Category:")
+            value = input("Enter one value:")
+            if value == 'exit_maca':
+                break
+            else:
+                AddCategory_Answers(category,value)
     elif command == 'ava':
         category = input("Name Category:")
         value = input("Value:")
         AddValue_Answers(category,value)
+    elif command == 'mava':
+        category = input("Name Category:")
+        while True:
+            value = input("Value:")
+            if value == 'exit_mava':
+                break
+            else:
+                AddValue_Answers(category,value)
     elif command == "rubq":
         RuBQ()
     elif command == "save":
         Save()
     elif command == 'exit':
         break
-
 Save()
