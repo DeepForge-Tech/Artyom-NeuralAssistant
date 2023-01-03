@@ -94,6 +94,22 @@ def RuBQ():
             }
         )
 
+def Add_to_Settings(Name):
+    LatestInt = -1
+    for value in Settings["CATEGORIES"]:
+        LatestInt += 1
+    print(LatestInt)
+    Settings["CATEGORIES"].update(
+        {
+            Name: LatestInt
+        }
+    )
+    Settings["CATEGORIES_TARGET"].update(
+        {
+            LatestInt:Name
+        }
+    )
+
 def AddCategory(Name,Value):
     if not Name in Dataset["dataset"]:
         Dataset["dataset"].update(
@@ -103,14 +119,38 @@ def AddCategory(Name,Value):
                 }
             }
         )
+        print("Success!")
+        Add_to_Settings(Name)
     elif Name in Dataset["dataset"]:
         Dataset["dataset"][Name].append(Value)
+        Add_to_Settings(Name)
+        print("Success!")
 
 def AddValue(NameCategory,Value):
     if NameCategory in Dataset["dataset"]:
         Dataset["dataset"][NameCategory]["questions"].append(Value)
+        print("Success!")
     elif not NameCategory in Dataset["dataset"]:
         print("Category is not found in dataset.")
+
+def AddCategory_Answers(Name,Value):
+    if not Name in ArtyomSettings:
+        ArtyomSettings.update(
+            {
+                Name: [Value]
+            }
+        )
+        print("Success!")
+    elif Name in ArtyomSettings:
+        ArtyomSettings[Name].append(Value)
+        print("Success!")
+
+def AddValue_Answers(Name,Value):
+    if not Name in ArtyomSettings:
+        print("Category is not found in answers.")
+    elif Name in ArtyomSettings:
+        ArtyomSettings[Name].append(Value)
+        print("Success!")
 
 def Save():
     DatasetFile = open(os.path.join(ProjectDir,"Datasets/ArtyomDataset_2.json"),"w",encoding="utf-8")
@@ -135,6 +175,14 @@ while True:
         category = input("Name Category:")
         value = input("Value:")
         AddValue(category,value)
+    elif command == 'aca':
+        category = input("Name Category:")
+        value = input("Enter one value:")
+        AddCategory_Answers(category,value)
+    elif command == 'ava':
+        category = input("Name Category:")
+        value = input("Value:")
+        AddValue_Answers(category,value)
     elif command == "rubq":
         RuBQ()
     elif command == "save":

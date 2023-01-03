@@ -40,7 +40,7 @@ else:
 
 
 learning_rate = 0.001
-EPOCHS = 100000
+EPOCHS = 200000
 BATCH_SIZE = 50
 MinimalThreshold = 0.3
 
@@ -111,6 +111,12 @@ class NeuralNetwork:
             return y * (1 - y)
         except Exception as Error:
             logger.error(f"Exception error: {Error}.")
+
+    def batch(self,iterable, n=1):
+        l = len(iterable)
+        for ndx in range(0, l, n):
+            yield iterable[ndx:min(ndx + n, l)]
+
     # Функция прямого распространени нейросети
     def FeedForward(self,Input):
         try:
@@ -151,18 +157,19 @@ class NeuralNetwork:
         self.GenerateWeights()
         # Прохождение по датасету циклом for
         for epoch in track(range(EPOCHS), description='[green]Training model'):
-            # Вызов функции для расчёта прямого распространения нейросети
-            PredictedValue = self.FeedForward(TrainInput)
-            # Вызов функции для расчёта обратного распространения ошибки нейросети
-            self.BackwardPropagation(TrainInput,TrainTarget)
-            # Расчёт ошибки
-            self.Loss = np.sum(self.CrossEntropy(self.OutputLayer, TrainTarget))
-            # Сохранение модели с наименьшей ошибкой
-            if self.Loss <= self.LocalLoss:
-                self.LocalLoss = self.Loss
-                self.save()
-            # Добавление ошибки в массив для дальнейшего вывода графика ошибки нейросети
-            self.LossArray.append(self.Loss)
+            for TrainInput,TrainTarget in zip(self.batch(TrainInput,BATCH_SIZE),self.batch(TrainTarget,BATCH_SIZE)):
+                # Вызов функции для расчёта прямого распространения нейросети
+                PredictedValue = self.FeedForward(TrainInput)
+                # Вызов функции для расчёта обратного распространения ошибки нейросети
+                self.BackwardPropagation(TrainInput,TrainTarget)
+                # Расчёт ошибки
+                self.Loss = np.sum(self.CrossEntropy(self.OutputLayer, TrainTarget))
+                # Сохранение модели с наименьшей ошибкой
+                if self.Loss <= self.LocalLoss:
+                    self.LocalLoss = self.Loss
+                    self.save()
+                # Добавление ошибки в массив для дальнейшего вывода графика ошибки нейросети
+                self.LossArray.append(self.Loss)
         # Вывод графика ошибки нейросети
         plt.plot(self.LossArray)
         # plt.show() 
