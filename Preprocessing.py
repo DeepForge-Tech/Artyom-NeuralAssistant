@@ -5,8 +5,11 @@ import os
 import json
 import random
 # import librosa
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder,OneHotEncoder
 from rich.progress import track
+import pandas as pd
+from sklearn.decomposition import TruncatedSVD
+from sklearn.linear_model import LogisticRegression
 
 # Подготовка датасета
 ProjectDir = os.getcwd()
@@ -134,7 +137,7 @@ class PreprocessingDataset:
             vectorizer.fit_transform(DataFile)
             self.PredictInput = self.ToMatrix(vectorizer.transform(self.PredictArray).toarray())
             return self.PredictInput
-
+# clf.predict(X[:2, :])
 # TrainInput,TrainTarget = PreprocessingDataset().PreprocessingAudio(PathAudio="C:/Users/Blackflame576/Documents/Blackflame576/DigitalBit/Artyom-NeuralAssistant/Datasets/SpeechDataset/")
 # x = np.linspace(0, 2*np.pi, 8)
 # y = np.sin(x) + np.random.normal(0, 0.4, 8)

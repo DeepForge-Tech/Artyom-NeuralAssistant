@@ -19,8 +19,8 @@ import platform
 from loguru import logger
 from datetime import date
 from Alarm import Alarm
-from Timer import Timer
-from Stopwatch import Stopwatch
+from Timer.Timer import Timer
+from Stopwatch.Stopwatch import Stopwatch
 if platform.system() == 'Windows':
     from win10toast import ToastNotifier
 from PIL import ImageGrab
