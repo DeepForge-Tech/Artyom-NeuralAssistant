@@ -8,6 +8,14 @@ DatasetFile = open(os.path.join(ProjectDir,"Datasets/ArtyomDataset.json"),"r",en
 Dataset = json.load(DatasetFile)
 DatasetFile.close
 
+WikiDatasetFile = open(os.path.join(ProjectDir,"Datasets/WikiDataset.json"),"r",encoding="utf-8")
+WikiDataset = json.load(WikiDatasetFile)
+WikiDatasetFile.close
+
+WikiSettingsFile = open(os.path.join(ProjectDir,"NeuralNetworkSettings/WikiSettings.json"),"r",encoding="utf-8")
+WikiSettings = json.load(WikiSettingsFile)
+WikiSettingsFile.close()
+
 AdditionalDatasetFile = open(os.path.join(ProjectDir,"Datasets/RuBQ_2.0.json"),"r",encoding="utf-8")
 AdditionalDataset = json.load(AdditionalDatasetFile)
 AdditionalDatasetFile.close()
@@ -23,6 +31,36 @@ ArtyomSettingsFile.close()
 SettingsFile = open(os.path.join(ProjectDir,"NeuralNetworkSettings/Settings.json"),"r",encoding="utf-8")
 Settings = json.load(SettingsFile)
 SettingsFile.close()
+
+def RuBQ_2():
+    LatestInt = -1
+    for value in WikiSettings["CATEGORIES"]:
+        LatestInt += 1
+    print(LatestInt)
+    for Group in AdditionalDataset[:128]:
+        # for symbol in symbols:
+        Question = (Group["question_text"]).replace('"',"")
+        Answer = (Group["answer_text"]).replace('"',"")
+        WikiDataset["dataset"].update(
+            {
+                Answer:{
+                    "questions": [Question]
+                }
+            }
+        )
+        # LatestInt_2 = LatestInt
+        LatestInt += 1
+        WikiSettings["CATEGORIES"].update(
+            {
+                Answer: LatestInt
+            }
+        )
+
+        WikiSettings["CATEGORIES_TARGET"].update(
+            {
+                LatestInt:Answer
+            }
+        )
 
 def RuBQ():
     LatestInt = -1
@@ -157,6 +195,14 @@ def Save():
     json.dump(Dataset,DatasetFile,ensure_ascii=False, indent=2)
     DatasetFile.close
 
+    WikiDatasetFile = open(os.path.join(ProjectDir,"Datasets/WikiDataset.json"),"w",encoding="utf-8")
+    json.dump(WikiDataset,WikiDatasetFile,ensure_ascii=False, indent=2)
+    WikiDatasetFile.close
+
+    WikiSettingsFile = open(os.path.join(ProjectDir,"NeuralNetworkSettings/WikiSettings.json"),"w",encoding="utf-8")
+    json.dump(WikiSettings,WikiSettingsFile,ensure_ascii=False, indent=2)
+    WikiSettingsFile.close()
+
     ArtyomSettingsFile = open(os.path.join(ProjectDir,"NeuralNetworkSettings/ArtyomAnswers_2.json"),"w",encoding="utf-8")
     json.dump(ArtyomSettings,ArtyomSettingsFile,ensure_ascii=False, indent=2)
     ArtyomSettingsFile.close()
@@ -217,6 +263,8 @@ while True:
                 AddValue_Answers(category,value)
     elif command == "rubq":
         RuBQ()
+    elif command == "rubq_2":
+        RuBQ_2()
     elif command == "save":
         Save()
     elif command == 'exit':

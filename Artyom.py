@@ -58,28 +58,28 @@ stopwatch = Stopwatch()
 
 class ArtyomAssistant:
     def __init__(self):
-        self.Functions = [
-            self.CommunicationCommand,self.WeatherCommand,self.YoutubeCommand,
-            self.WebbrowserCommand,self.MusicCommand,self.NewsCommand,
-            self.ToDoCommand,self.CalendarCommand,self.JoikesCommand,
-            self.ExitCommand,self.TimeCommand,self.GratitudeCommand,
-            self.StopwatchCommand,self.TimerCommand,self.ShutdownCommand,
-            self.RebootCommand,self.HibernationCommand,self.AlarmCommand,
-            self.FavouriteAppCommand,self.VSCodeCommand,self.NotepadCommand,
-            self.MailCommand,self.DateCommand,self.HowAreYouCommand,self.WhatYouDoCommand
-        ]
-        # self.Functions = {
-        #     'communication':self.CommunicationCommand,'weather':self.WeatherCommand,
-        #     'time':self.TimeCommand,'youtube':self.YoutubeCommand,
-        #     'webbrowser':self.WebbrowserCommand,'hibernation':self.HibernationCommand,'reboot':self.RebootCommand,
-        #     'shutdown':self.ShutdownCommand,'news':self.NewsCommand,
-        #     'todo':self.TodoCommand,'calendar':self.CalendarCommand,
-        #     'joikes':self.JoikesCommand,'exit':self.ExitCommand,
-        #     'gratitude':self.GratitudeCommand,'vscode':self.VSCodeCommand,
-        #     'todo':self.ToDoCommand,'alarm':self.AlarmCommand,
-        #     'timer':self.TimerCommand,'stopwatch':self.StopwatchCommand,
-        #     'screenshot':self.ScreenShotCommand,
-        # }
+        # self.Functions = [
+        #     self.CommunicationCommand,self.WeatherCommand,self.YoutubeCommand,
+        #     self.WebbrowserCommand,self.MusicCommand,self.NewsCommand,
+        #     self.ToDoCommand,self.CalendarCommand,self.JoikesCommand,
+        #     self.ExitCommand,self.TimeCommand,self.GratitudeCommand,
+        #     self.StopwatchCommand,self.TimerCommand,self.ShutdownCommand,
+        #     self.RebootCommand,self.HibernationCommand,self.AlarmCommand,
+        #     self.FavouriteAppCommand,self.VSCodeCommand,self.NotepadCommand,
+        #     self.MailCommand,self.DateCommand,self.HowAreYouCommand,self.WhatYouDoCommand
+        # ]
+        self.Functions = {
+            'communication':self.CommunicationCommand,'weather':self.WeatherCommand,
+            'time':self.TimeCommand,'youtube':self.YoutubeCommand,
+            'webbrowser':self.WebbrowserCommand,'hibernation':self.HibernationCommand,'reboot':self.RebootCommand,
+            'shutdown':self.ShutdownCommand,'news':self.NewsCommand,
+            'todo':self.TodoCommand,'calendar':self.CalendarCommand,
+            'joikes':self.JoikesCommand,'exit':self.ExitCommand,
+            'gratitude':self.GratitudeCommand,'vscode':self.VSCodeCommand,
+            'todo':self.ToDoCommand,'alarm':self.AlarmCommand,
+            'timer':self.TimerCommand,'stopwatch':self.StopwatchCommand,
+            'screenshot':self.ScreenShotCommand,
+        }
         self.RecognitionModel = Model('model')
         self.Recognition = KaldiRecognizer(self.RecognitionModel,16000)
         self.RecognitionAudio = pyaudio.PyAudio()
@@ -131,7 +131,8 @@ class ArtyomAssistant:
                     Words.append(Transforms["Nums"][number])
                     text = text.replace(number,str(Transforms["Nums"][number]))
             TransformedText = text
-            return TransformedText,Words
+            print(TransformedText)
+            return TransformedText
         elif from_date == True:
             TransformedText = ""
             Words = []
@@ -141,7 +142,7 @@ class ArtyomAssistant:
                     Words.append(Transforms["Date"][string_date])
                     text = text.replace(string_date,str(Transforms["Date"][string_date]))
             TransformedText = text
-            return TransformedText,Words
+            return TransformedText
     
     def CommunicationCommand(self):
         self.Tell(random.choice(ANSWERS['communication']))
@@ -164,10 +165,10 @@ class ArtyomAssistant:
     def WeatherCommand(self,WithInternet:bool=False):
         geolocation = geocoder.ip('me')
         coordinates = geolocation.latlng
-        location = str(location.address.split(',')[4]).lower()
+        # location = str(geolocation.address.split(',')[4]).lower()
         mgr = owm.weather_manager()
-        one_call = mgr.one_call(lat=coordinates[0], lon=coordinates[1])
-        temp = one_call.current.temperature('celsius')['temp']  # {'temp_max': 10.5, 'temp': 9.7, 'temp_min': 9.0}
+        one_call = mgr.weather_at_coords(lat=coordinates[0], lon=coordinates[1])
+        temp = one_call.get_weather().get_temperature('celsius')['temp']  # {'temp_max': 10.5, 'temp': 9.7, 'temp_min': 9.0}
         print(temp)
         temp_str = self.FilteringTransforms(f'Сейчас {temp} ',to_words=True)
         self.Tell(temp_str)
@@ -179,7 +180,6 @@ class ArtyomAssistant:
         self.Tell(LocalDate_str)
     
     def TimeCommand(self):
-        print("time")
         hours = int(time.strftime('%H'))
         minutes = int(time.strftime('%M'))
         time_str = self.FilteringTransforms(f'Сейчас {hours} {minutes}',to_words=True)
@@ -358,6 +358,7 @@ class ArtyomAssistant:
         pass
 
     def CommandManager(self,PredictedValue,text:None,PredictedInt:int):
+        # self.Functions[PredictedInt]
         if PredictedValue == "don't_know":
             self.Tell(random.choice(ANSWERS["don't_know"]))
         else:
@@ -369,26 +370,29 @@ class ArtyomAssistant:
                 self.StopwatchCommand(operation,text)
             elif operation == 'timer' or operation == 'off-timer' or operation == 'pause-timer' or operation == 'unpause-timer':
                 self.TimerCommand(operation,text)
+            elif operation == 'time':
+                self.TimeCommand()
             else:
                 print("Hello")
-                self.Functions[PredictedInt]
+                self.Functions[PredictedValue]
+                self.WeatherCommand()
 
     def Start(self):
-        self.Alarm_Class = Alarm()
-        AlarmThread = threading.Thread(target = self.Alarm_Class.CheckAlarm)
-        AlarmThread.start()
-        self.ToDo = TodoManager()
-        ToDoThread = threading.Thread(target = self.ToDo.CheckNote)
-        ToDoThread.start()
+        # self.Alarm_Class = Alarm()
+        # AlarmThread = threading.Thread(target = self.Alarm_Class.CheckAlarm)
+        # AlarmThread.start()
+        # self.ToDo = TodoManager()
+        # ToDoThread = threading.Thread(target = self.ToDo.CheckNote)
+        # ToDoThread.start()
         for text in self.SpeechRecognition():
             print(text)
             for name in NAMES:
                 if name.lower() in text and len(text.split()) > 1:
-                    print('hello')
                     Input = text.replace(name.lower(),"")
                     Input = [text]
                     Input = Preprocessing.PreprocessingText(PredictArray = Input,mode = 'predict')
                     PredictedValue,PredictedInt = network.predict(Input)
+                    self.WeatherCommand()
                     self.CommandManager(PredictedValue,text,PredictedInt)
                     break
                 elif name.lower() in text and len(text.split()) == 1:
@@ -458,7 +462,6 @@ class TodoManager(ArtyomAssistant):
             if time in self.TodoNotes["notes"][date]:
                 if text in self.TodoNotes["notes"][date][time]:
                     self.TodoNotes["notes"][date][time].remove(text)
-                    print("Hello")
                     self.SaveNotes()
         # else:
         #     self.Tell(random.choice(["Заметка отсутствует","Я не нашёл такой заметки","Заметка не найдена","Такой заметки нет","Такой заметки не существует"]))
