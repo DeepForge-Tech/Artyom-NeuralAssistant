@@ -187,6 +187,7 @@ class NeuralNetwork:
         PredictedArray = self.FeedForward(Input)
         PredictedValue = np.argmax(PredictedArray)
         print(PredictedValue)
+        print(self.CATEGORIES_TARGET[str(PredictedValue)])
         # if float(PredictedArray[0][PredictedValue]) >= MinimalThreshold:
         #     print(self.CATEGORIES_TARGET[str(PredictedValue)])
         #     return self.CATEGORIES_TARGET[str(PredictedValue)],PredictedValue
@@ -226,4 +227,4 @@ if __name__ == '__main__':
     # Вызов функции тренировки нейросети
     network.train(TrainInput,TrainTarget)
     # Функция для вызова нейросети
-    network.predict(Preprocessing.PreprocessingWikiText(PredictArray = ['В каком году сняли с производства Porsche 550?'],mode = 'predict'))
+    network.predict(Preprocessing.PreprocessingWikiText(PredictArray = ['Что может вызвать цунами?'],mode = 'predict'))

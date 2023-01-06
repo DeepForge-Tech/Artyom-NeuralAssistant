@@ -1,7 +1,10 @@
 import json
 import os
 
+# Инициализация переменных
 symbols = ['"','?','!','/']
+Limit = 128
+
 # Подготовка датасета
 ProjectDir = os.getcwd()
 DatasetFile = open(os.path.join(ProjectDir,"Datasets/ArtyomDataset.json"),"r",encoding="utf-8")
@@ -37,7 +40,7 @@ def RuBQ_2():
     for value in WikiSettings["CATEGORIES"]:
         LatestInt += 1
     print(LatestInt)
-    for Group in AdditionalDataset[:128]:
+    for Group in AdditionalDataset[:Limit]:
         # for symbol in symbols:
         Question = (Group["question_text"]).replace('"',"")
         Answer = (Group["answer_text"]).replace('"',"")
