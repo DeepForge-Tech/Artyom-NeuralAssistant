@@ -7,9 +7,6 @@ import random
 # import librosa
 from sklearn.preprocessing import LabelEncoder,OneHotEncoder
 from rich.progress import track
-import pandas as pd
-from sklearn.decomposition import TruncatedSVD
-from sklearn.linear_model import LogisticRegression
 
 # Подготовка датасета
 ProjectDir = os.getcwd()
