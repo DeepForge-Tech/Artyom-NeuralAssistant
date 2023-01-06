@@ -157,7 +157,7 @@ class PreprocessingDataset:
             self.Dictionary = list(Dictionary.items())
             random.shuffle(self.Dictionary)
             self.Dictionary = dict(self.Dictionary)
-            for intent in track(self.Dictionary,description='[green]Preprocessing dataset'):
+            for intent in track(self.Dictionary,description='[green]Preprocessing Wiki Dataset'):
                 for questions in Dictionary[intent]['questions']:
                     self.x.append(questions)
                     self.y.append(intent)
@@ -170,7 +170,7 @@ class PreprocessingDataset:
             vectorizer = TfidfVectorizer()
             vectorizer = vectorizer.fit_transform(self.x)
             VectorizedData = vectorizer.toarray()
-            InputDatasetFile = open("Datasets/InputDataset.json", "w", encoding ='utf8')
+            InputDatasetFile = open("Datasets/WikiInputDataset.json", "w", encoding ='utf8')
             json.dump(self.x, InputDatasetFile,ensure_ascii=False,sort_keys=True, indent=2)
             InputDatasetFile.close()
             if self.Mode == 'train':
@@ -182,7 +182,7 @@ class PreprocessingDataset:
 
         elif self.Mode == 'predict':
             self.PredictArray = PredictArray
-            InputDatasetFile = open("Datasets/InputDataset.json", "r", encoding ='utf8')
+            InputDatasetFile = open("Datasets/WikiInputDataset.json", "r", encoding ='utf8')
             DataFile = json.load(InputDatasetFile)
             InputDatasetFile.close()
             vectorizer = TfidfVectorizer()
