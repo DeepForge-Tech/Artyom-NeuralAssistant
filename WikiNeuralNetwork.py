@@ -40,7 +40,7 @@ else:
 
 
 learning_rate = 0.001
-EPOCHS = 100000
+EPOCHS = 200000
 BATCH_SIZE = 50
 MinimalThreshold = 0.3
 
@@ -156,7 +156,7 @@ class NeuralNetwork:
         # print(self.INPUT_DIM)
         self.GenerateWeights()
         # Прохождение по датасету циклом for
-        for epoch in track(range(EPOCHS), description='[green]Training model'):
+        for epoch in track(range(EPOCHS), description='[green]Training WikiNeuralNetwork'):
             # Вызов функции для расчёта прямого распространения нейросети
             PredictedValue = self.FeedForward(TrainInput)
             # Вызов функции для расчёта обратного распространения ошибки нейросети
@@ -227,4 +227,6 @@ if __name__ == '__main__':
     # Вызов функции тренировки нейросети
     network.train(TrainInput,TrainTarget)
     # Функция для вызова нейросети
-    network.predict(Preprocessing.PreprocessingWikiText(PredictArray = ['Что может вызвать цунами?'],mode = 'predict'))
+    network.predict(Preprocessing.PreprocessingWikiText(PredictArray = ['Как называется столица Румынии?'],mode = 'predict'))
+    if hostname.startswith("rpi"):
+        Clean()
